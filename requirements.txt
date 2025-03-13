@@ -1,0 +1,15 @@
+selenium
+beautifulsoup4
+requests
+pandas
+numpy
+webdriver-manager
+nltk
+openpyxl
+scikit-learn
+fuzzywuzzy
+boto3
+captcha-solver
+amazoncaptcha
+python_anticaptcha
+# .\venv\Scripts\Activate.ps1
