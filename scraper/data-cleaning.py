@@ -4,7 +4,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
 
 file_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\2025Jan1-2025Feb28CustomUnifiedTransaction.csv"
-df = pd.read_csv(file_path)
+df = pd.read_csv(file_path, skiprows=7)
 
 df = df[~df['type'].isin(['Amazon Fees', 'FBA Inventory Fee'])]
 
