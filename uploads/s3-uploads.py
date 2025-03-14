@@ -1,4 +1,5 @@
 import os
+import sys
 import boto3
 from datetime import datetime
 from dotenv import load_dotenv
@@ -8,9 +9,12 @@ from pathlib import Path
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger('s3_uploader')
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('logs\s3-uploads.log', encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)]
+    )
+logger = logging.getLogger(__name__)
 
 def load_environment_variables():
     load_dotenv()
