@@ -1,277 +1,222 @@
-import asyncio
-import json
 import os
+import sys
 import time
+import json
+import random
 import logging
-from datetime import datetime, timedelta
-from playwright.async_api import async_playwright
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
+# LOGGING CONFIGURATION
 logging.basicConfig(
-            level=logging.INFO, 
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('scraper.log'),
-            ])
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('logs\busniess_reports_scraper.log', encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)]
+    )
 logger = logging.getLogger(__name__)
 
+# LOAD ENVIRONMENT VARIABLES
 load_dotenv()
 
+# CONFIGURATION
 CONFIG = {
-    "download_path": os.path.join(os.getcwd(), os.getenv("DOWNLOAD_PATH", "reports")),
-    "cookies_path": os.path.join(os.getcwd(), os.getenv("COOKIES_PATH", "cookies.json")),
+    "download_path": os.path.join(os.getcwd(), "reports"),
+    "cookies_path": os.path.join(os.getcwd(), "cookies.json"),
     "login_url": os.getenv("LOGIN_URL"),
     "credentials": {
         "email": os.getenv("AMAZON_SELLER_EMAIL"),
         "password": os.getenv("AMAZON_SELLER_PASSWORD")
     },
-    "wait_time": {
-        "short": int(os.getenv("WAIT_TIME_SHORT", 2000)) / 1000,
-        "medium": int(os.getenv("WAIT_TIME_MEDIUM", 5000)) / 1000,
-        "long": int(os.getenv("WAIT_TIME_LONG", 10000)) / 1000
-    },
-    "concurrency": int(os.getenv("CONCURRENCY", 7)),
-    "headless": os.getenv("HEADLESS", "False").upper() == "False"
 }
 
-os.makedirs(CONFIG["download_path"], exist_ok=True)
+class BusinessReportDownloads:
+    def __init__(self):
+        """Initializing the Web Scraper."""
+        self.driver = self.setup_driver()
 
-async def save_cookies(context):
-    cookies = await context.cookies()
-    with open(CONFIG["cookies_path"], "w") as f:
-        json.dump(cookies, f, indent=2)
-    logger.info("Cookies saved successfully")
-
-async def load_cookies(context):
-    if os.path.exists(CONFIG["cookies_path"]):
-        with open(CONFIG["cookies_path"], "r") as f:
-            cookies = json.load(f)
-
-        if cookies:
-            await context.add_cookies(cookies)
-            logger.info("✅ Cookies loaded successfully → Skipping login!")
-            return True  # Skip login if cookies are valid
+    def setup_driver(self):
+        """Setup Selenium WebDriver with optimized options."""
+        options = Options()
+        options.add_argument("--start-maximized")
+        options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        return webdriver.Chrome(options=options)
     
-    logger.warning("⚠️ No valid cookies found → Login required!")
-    return False  # Proceed with login
-
-async def is_login_required(page):
-    current_url = page.url
-    if "signin" in current_url:
-        return True
-    is_logged_in = await page.evaluate("""
-        () => !document.querySelector('input[name="email"]') && \
-               !document.querySelector('input[name="password"]')
-    """)
-    return not is_logged_in
-
-async def login(page):
-    logger.info("🔑 Logging in to Amazon Seller Central...")
-
-    await page.goto(CONFIG["login_url"], wait_until="networkidle")
-
-    # Enter Email
-    await page.fill("input[name='email']", CONFIG["credentials"]["email"])
-    await page.click("input[type='submit']")
+    def random_delay(self, min_seconds=2, max_seconds=5):
+        """Add a Random Delay Between Actions to Avoid Detection."""
+        delay = random.uniform(min_seconds, max_seconds)
+        logger.info(f"Delaying for {delay:.2f} seconds...")
+        time.sleep(delay)
     
-    # Enter Password
-    await page.wait_for_selector("input[name='password']", timeout=10000)
-    await page.fill("input[name='password']", CONFIG["credentials"]["password"])
-    await page.click("input[id='signInSubmit']")
+    def load_cookies(self):
+        """Load Cookies from File."""
+        if os.path.exists(CONFIG["cookies_path"]):
+            self.driver.get(CONFIG["login_url"])
+            with open(CONFIG["cookies_path"], "r") as f:
+                cookies = json.load(f)
+            for cookie in cookies:
+                self.driver.add_cookie(cookie)
+            logger.info("Cookies loaded successfully -> Skipping login!")
+            return True
+        return False
     
-    # Check if MFA is required
-    try:
-        await page.wait_for_selector("input[name='otpCode']", timeout=5000)
-        logger.info("🔐 2FA/MFA required! Enter OTP manually.")
+    def save_cookies(self):
+        """Save Cookies After Login."""
+        with open(CONFIG["cookies_path"], 'w') as f: 
+            json.dump(self.driver.get_cookies(), f, indent=2)
+        logger.info("Cookies saved successfully!")
 
-        otp_code = input("Enter the OTP sent to your device: ")
-        await page.fill("input[name='otpCode']", otp_code)
-        await page.click("input[id='auth-signin-button']")
-        await page.wait_for_load_state("networkidle")
-        logger.info("✅ MFA Verification Complete!")
-        
-    except:
-        
-        logger.warning("✅ No 2FA prompt detected, proceeding...")
-
-    # Save cookies after login
-    await save_cookies(page.context)
-    logger.info("✅ Login successful, cookies saved!")
-
-async def download_report(page, start_date, end_date):
-    formatted_start_date = start_date.strftime("%m/%d/%Y")
-    formatted_end_date = end_date.strftime("%m/%d/%Y")
-    logger.info(f"\n📊 Initiating report download for {formatted_start_date} to {formatted_end_date}...")
-
-    # Navigate to Reports Repository
-    await page.goto(CONFIG["login_url"], wait_until="networkidle")
-
-    ## Step 1: Select "United States" Account
-    logger.info("🌎 Selecting United States Account...")
-    await page.wait_for_selector("button.full-page-account-switcher-account-details", timeout=30000)
-    await page.evaluate('''
-        () => {
-            let buttons = document.querySelectorAll("button.full-page-account-switcher-account-details");
-            for (let btn of buttons) {
-                if (btn.innerText.includes("United States")) {
-                    btn.click();
-                    return;
-                }
-            }
-        }
-    ''')
-    logger.info("✅ Selected 'United States'.")
-
-    ## Step 2: Click "Select Account" Button
-    logger.info("🔄 Clicking 'Select Account' button...")
-    await page.wait_for_selector("button.kat-button--primary.kat-button--base:not([disabled])", timeout=100000)
-    await page.click("button.kat-button--primary.kat-button--base:not([disabled])")
-    logger.info("✅ Account selected.")
-
-    ## Step 3: Navigate to "Payments" > "Report Repository"
-    logger.info("📂 Navigating to 'Payments' → 'Report Repository'...")
-
-    await page.wait_for_selector("div.nav-button", timeout=100000)
-    await page.click("div.nav-button")
-    logger.info("✅ Opened main navigation.")
-
-    await page.wait_for_selector("span.nav-section-label:text('Payments')", timeout=100000)
-    await page.click("span.nav-section-label:text('Payments')")
-    logger.info("✅ Selected 'Payments'.")
-
-    await page.wait_for_selector("a.flyout-menu-item-container[href*='payments/reports-repository']", timeout=50000)
-    await page.click("a.flyout-menu-item-container[href*='payments/reports-repository']")
-    logger.info("✅ Navigated to 'Report Repository'.")
-
-    ## Step 4: Set Date Range for Report
-    logger.info("📅 Setting date range for report...")
-
-    await page.wait_for_selector("kat-input[name='startDate']", timeout=50000)
-    await page.wait_for_selector("kat-input[name='endDate']", timeout=50000) 
-    
-    # Set "From Date" (Start Date)
-    await page.evaluate("""
-        (dateValue) => {
-            let datePicker = document.querySelector("kat-date-picker[name='startDate']");
-            if (datePicker) {
-                datePicker.value = dateValue;
-                datePicker.dispatchEvent(new Event('input', { bubbles: true }));
-                datePicker.dispatchEvent(new Event('change', { bubbles: true }));
-            } else {
-                console.error("❌ Start Date picker not found!");
-            }
-        }
-    """, formatted_start_date)
-
-    # Set "To Date" (End Date)
-    await page.evaluate("""
-        (dateValue) => {
-            let datePicker = document.querySelector("kat-date-picker[name='endDate']");
-            if (datePicker) {
-                datePicker.value = dateValue;
-                datePicker.dispatchEvent(new Event('input', { bubbles: true }));
-                datePicker.dispatchEvent(new Event('change', { bubbles: true }));
-            } else {
-                console.error("❌ End Date picker not found!");
-            }
-        }
-    """, formatted_end_date)
-
-    logger.info("✅ Date range set successfully.")
-
-    ## Step 5: Click "Request Report"
-    await page.wait_for_selector("kat-button#filter-generate-button", timeout=50000)
-
-    # Click the button using JavaScript to ensure compatibility with Shadow DOM
-    await page.evaluate("""
-        () => {
-            let requestButton = document.querySelector("kat-button#filter-generate-button");
-            if (requestButton) {
-                requestButton.click();
-            } else {
-                console.error("'Request Report' button not found!");
-            }
-        }
-    """)
-
-    logger.info("Report request submitted.")
-
-    ## Step 6: Wait for Report to be Ready
-    logger.info("Waiting for report to be ready...")
-    
-    while True:
+    def login(self):
+        """Handle Login and MFA (if required)."""
+        self.driver.get(CONFIG["login_url"])
         try:
-            # Locate the first row in the report table
-            report_row = await page.query_selector("kat-table-row:nth-child(1)")
-            if not report_row:
-                print("⚠️ Report row not found, retrying...")
-                await asyncio.sleep(5)
-                continue
+            logger.info("Logging in...")
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.NAME, "email"))
+            ).send_keys(CONFIG["credentials"]["email"], Keys.RETURN)
+            
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.NAME, "password"))
+            ).send_keys(CONFIG["credentials"]["password"], Keys.RETURN)
 
-            # Locate the refresh button inside the <kat-table-cell> in the shadow DOM
-            refresh_button = await page.evaluate_handle('''
-                (row) => {
-                    if (!row || !row.shadowRoot) return null;
-                    const tableCell = row.shadowRoot.querySelector("kat-table-cell.header-cell-report-action");
-                    if (!tableCell || !tableCell.shadowRoot) return null;
-                    return tableCell.shadowRoot.querySelector("kat-button");
-                }
-            ''', report_row)
+            self.random_delay(2, 4)
 
-            if not refresh_button:
-                print("⚠️ Refresh button not found, retrying...")
-                await asyncio.sleep(5)
-                continue
-
-            # Get the button text
-            button_text = await refresh_button.evaluate('(button) => button.innerText')
-
-            if "Download CSV" in button_text:
-                print("✅ Download button detected. Initiating download...")
-                await refresh_button.click()
-                break  # Exit loop once the correct button appears
-
-            print("🔄 Report not ready. Clicking refresh...")
-            await refresh_button.click()
-            await asyncio.sleep(5)  # Wait before retrying
+            # Handle OTP/MFA manually
+            try:
+                otp_input = WebDriverWait(self.driver, 5).until(
+                    EC.presence_of_element_located((By.NAME, "otpCode"))
+                )
+                otp_code = input("Enter OTP Code: ")
+                otp_input.send_keys(otp_code, Keys.RETURN)
+                self.random_delay(2, 4)
+            except:
+                logger.info("No OTP required")
+            
+            self.save_cookies()
+            logger.info("Login was successful!")
 
         except Exception as e:
-            print(f"⚠️ Error detecting refresh button: {e}")
-            await asyncio.sleep(5)
-    ## Step 8: Download Report
-    await refresh_button.click()
-    logger.info("Download started.")
+            logger.warning(f"Login failed: {e}")
 
-    time.sleep(10)
-    logger.info(f"Report for {formatted_start_date} to {formatted_end_date} downloaded successfully.")
-    
-async def main():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(
-        headless=False,  # Ensure browser UI is visible
-        args=["--start-maximized"]  # Maximizes window
-        )
-        context = await browser.new_context(
-        viewport={"width": 1920, "height": 1080}  # Optional: Set fixed resolution
-        )
-        page = await context.new_page()
-        
-        # Load Cookies, If Not Available → Perform Login
-        cookies_loaded = await load_cookies(context)
-        if not cookies_loaded:
-            await login(page)
-
+    def navigate_to_reports(self):
+        """Navigate to Reports Repository."""
         logger.info("Navigating to Reports Page...")
-        await page.goto(CONFIG["login_url"], wait_until="networkidle")
+        self.driver.get(CONFIG['login_url'])
+        self.random_delay(2, 4)
+
+        try:
+            us_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="sc-content-container"]/div/div[1]/div/div/div/div[11]/button')))
+            us_button.click()
+            logger.info("Clicked on US button")
+
+            select_button = WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="sc-content-container"]/div/div[2]/button')))
+            select_button.click()
+            logger.info("Clicked on 'Select Account' button")
+        except:
+            logger.info("'United States' button not found")
+
+        try:
+            logger.info("Clicking on 'Skip button'")
+            skip_button = WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="react-joyride-step-0"]/div/div/div/div[2]/div/button')))
+            skip_button.click()
+            logger.info("Successfully clicked 'Skip button'.")
+        except:
+            logger.warning("'Skip button' not found")
+
+    def expand_shadow_element(self, selector):
+        """Expands Shadow DOM and Returns the Input Element Inside."""
+        shadow_host = self.driver.find_element(By.CSS_SELECTOR, selector)
+        shadow_root = self.driver.execute_script("return arguments[0].shadowRoot", shadow_host)
+        return shadow_root.find_element(By.CSS_SELECTOR, "input")
+
+    def set_date_range(self, start_date, end_date):
+        """Set Date Range in the Shadow DOM Date Picker."""
+        logger.info(f"Setting date range: {start_date} -> {end_date}")
+
+        try:
+            # Expand Shadow DOM elements
+            start_date_input = self.expand_shadow_element("kat-date-picker[name='startDate']")
+            end_date_input = self.expand_shadow_element("kat-date-picker[name='endDate']")
+
+            # Function to set date
+            def set_date(input_element, date_value):
+                self.driver.execute_script("arguments[0].value = arguments[1];", input_element, date_value)
+                self.driver.execute_script("arguments[0].dispatchEvent(new Event('input', { bubbles: true }));", input_element)
+                self.driver.execute_script("arguments[0].dispatchEvent(new Event('change', { bubbles: true }));", input_element)
+
+            set_date(start_date_input, start_date)
+            set_date(end_date_input, end_date)
+            logger.info("Date range set successfully!")
+
+        except Exception as e:
+            logger.warning(f"Error setting date: {e}")
+
+    def request_report(self):
+        """Click 'Request Report' Button."""
+        logger.info("Requesting report...")
+        request_button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "filter-generate-button"))
+        )
+        request_button.click()
+        self.random_delay(3, 5)
+        logger.info("Report request submitted.")
+
+    def wait_for_report(self):
+        """Wait for Report to be Ready and Download It."""
+        logger.info("Waiting for report to be ready...")
+
+        while True:
+            try:
+                # Click Refresh Button Every 2 Seconds
+                refresh_button = WebDriverWait(self.driver, 2).until(
+                    EC.element_to_be_clickable((By.XPATH, "//kat-button[contains(@label, 'Refresh')]"))
+                )
+                refresh_button.click()
+                logger.info("Clicked 'Refresh' button...")
+                time.sleep(2)
+
+                # Check if Download Button Exists
+                download_button = WebDriverWait(self.driver, 2).until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/article[3]/section/div/kat-card/div/div/div/div[1]/kat-table/kat-table-body/kat-table-row[1]/kat-table-cell[8]/div/kat-button'))
+                )
+                if download_button:
+                    logger.info("Report is ready! Clicking 'Download CSV' button...")
+                    download_button.click()
+                    time.sleep(5)
+                    logger.info("Report downloaded successfully!")
+                    return
+
+            except:
+                logger.warning("Report not ready, retrying in 2 seconds...")
+
+if __name__ == "__main__":
+    getreports = BusinessReportDownloads()
+    try:
+        if not getreports.load_cookies():
+            getreports.login()
+        getreports.navigate_to_reports()
 
         today = datetime.today()
         for i in range(7):
             date = today - timedelta(days=i+1)
-            await download_report(page, date, date)
-        
-        # await browser.close()
+            formatted_start_date = date.strftime("%m/%d/%Y")
+            formatted_end_date = date.strftime("%m/%d/%Y")
+
+            getreports.set_date_range(formatted_start_date, formatted_end_date)
+            getreports.request_report()
+            getreports.wait_for_report()
+
         logger.info("All reports downloaded successfully!")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    except Exception as e:
+        logger.warning(f"Files didn't downloaded: {e}")
