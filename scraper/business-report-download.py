@@ -18,7 +18,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs\busniess_reports_scraper.log', encoding='utf-8'),
+        logging.FileHandler(r'logs\busniess_reports_scraper.log', encoding='utf-8'),
         logging.StreamHandler(sys.stdout)]
     )
 logger = logging.getLogger(__name__)
@@ -48,6 +48,7 @@ class BusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--headless")
         return webdriver.Chrome(options=options)
     
     def random_delay(self, min_seconds=2, max_seconds=5):
@@ -65,6 +66,15 @@ class BusinessReportDownloads:
             for cookie in cookies:
                 self.driver.add_cookie(cookie)
             logger.info("Cookies loaded successfully -> Skipping login!")
+
+            # try:
+            #     WebDriverWait(self.driver, 5).until(
+            #         EC.presence_of_element_located((By.XPATH, '//*[@id="ap_email"]'))
+            #     )
+            #     logger.warning("Cookies expired -> Logging in again...")
+            #     return False
+            # except: 
+            #     logger.info("Session is active -> Skipping login!..")
             return True
         return False
     
@@ -80,11 +90,11 @@ class BusinessReportDownloads:
         try:
             logger.info("Logging in...")
             WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.NAME, "email"))
+                EC.presence_of_element_located((By.XPATH, '//*[@id="ap_email"]'))
             ).send_keys(CONFIG["credentials"]["email"], Keys.RETURN)
             
             WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.NAME, "password"))
+                EC.presence_of_element_located((By.XPATH, '//*[@id="ap_password"]'))
             ).send_keys(CONFIG["credentials"]["password"], Keys.RETURN)
 
             self.random_delay(2, 4)
@@ -193,7 +203,7 @@ class BusinessReportDownloads:
                 if download_button:
                     logger.info("Report is ready! Clicking 'Download CSV' button...")
                     download_button.click()
-                    time.sleep(5)
+                    self.random_delay(2, 4)
                     logger.info("Report downloaded successfully!")
                     return
 
@@ -203,12 +213,16 @@ class BusinessReportDownloads:
 if __name__ == "__main__":
     getreports = BusinessReportDownloads()
     try:
-        if not getreports.load_cookies():
+        if getreports.load_cookies():
+            logger.info("Cookies found, Skipping login!")
+        else:
+            logger.info("No valid cookies found -> Logging in!..")
             getreports.login()
+
         getreports.navigate_to_reports()
 
         today = datetime.today()
-        for i in range(7):
+        for i in range(1):
             date = today - timedelta(days=i+1)
             formatted_start_date = date.strftime("%m/%d/%Y")
             formatted_end_date = date.strftime("%m/%d/%Y")
