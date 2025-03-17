@@ -46,6 +46,19 @@ class DataProcessing:
         latest_file_path = os.path.join(self.report_folder, latest_file)
         logger.info(f"Latest report found: {latest_file_path}")
         return latest_file_path
+    
+    def read_material_master(self):
+        """Material Master file to merge the reports."""
+        try:
+            logger.info("Reading Material Master file.")
+            material_master_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\Enzymedica - Material Master 03172025.xlsx"
+            dff = pd.read_excel(material_master_path, sheet_name='All ASINs with Priority')
+            dff = dff[['seller-sku', 'ASIN']].rename(columns={'seller-sku': 'sku'})
+            dff['sku'] = dff['sku'].str.replace('FFP', '')
+            logger.info("Completed loading Material Master file.")
+            return dff
+        except Exception as e:
+            logger.warning("Couldn't able to read Material Master file.")
 
     def read_csv(self):
         """Reads and processes the latest report file."""
@@ -62,6 +75,10 @@ class DataProcessing:
         df.columns = df.columns.str.replace(' ', '_')
 
         df['data_time'] = pd.to_datetime(df['date/time'], errors='coerce')
+
+        df = df.dropna(subset=['sku']).reset_index(drop=True)
+
+        df['sku'] = df['sku'].str.replace(r'\s*FFP\s*', '', regex=True)
 
         numerical_columns = [
             'quantity', 'product_sales', 'product_sales_tax', 'shipping_credits',
@@ -90,10 +107,10 @@ class DataProcessing:
             df.get('promotional_rebates_tax', 0).astype(float)
         ).round(2)
 
-        df['amazon_fee'] = (
-            df.get('marketplace_withheld_tax', 0).astype(float) +
-            df.get('selling_fees', 0).astype(float)
-        ).round(2)
+        # df['amazon_fee'] = (
+        #     df.get('marketplace_withheld_tax', 0).astype(float) +
+        #     df.get('selling_fees', 0).astype(float)
+        # ).round(2)
 
         # Remove unwanted columns
         columns_to_remove = [
@@ -104,6 +121,21 @@ class DataProcessing:
         ]
 
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
+
+        material_master = self.read_material_master()
+
+        df = df.merge(material_master, on='sku', how='left')
+
+        rearrange_columns = [
+            'date/time','settlement_id','type','order_id','sku','ASIN', 'description','quantity','marketplace',
+            'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model','fba_fees',
+            'other_transaction_fees','other','total','sales','discounts'
+
+        ]
+
+        existing_columns = [col for col in rearrange_columns if col in df.columns]
+        
+        df = df[existing_columns]
 
         # Save processed file
         current_date = datetime.now().strftime("%Y-%m-%d")
