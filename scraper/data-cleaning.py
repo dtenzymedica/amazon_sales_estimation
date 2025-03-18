@@ -54,7 +54,7 @@ class DataProcessing:
             material_master_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\Enzymedica - Material Master 03172025.xlsx"
             dff = pd.read_excel(material_master_path, sheet_name='All ASINs with Priority')
             dff = dff[['seller-sku', 'ASIN']].rename(columns={'seller-sku': 'sku'})
-            dff['sku'] = dff['sku'].str.replace('FFP', '')
+            dff['sku'] = dff['sku'].str.replace('FFP', '').replace(' FFP', '')
             logger.info("Completed loading Material Master file.")
             return dff
         except Exception as e:

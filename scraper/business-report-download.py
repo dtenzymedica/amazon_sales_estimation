@@ -66,15 +66,6 @@ class BusinessReportDownloads:
             for cookie in cookies:
                 self.driver.add_cookie(cookie)
             logger.info("Cookies loaded successfully -> Skipping login!")
-
-            # try:
-            #     WebDriverWait(self.driver, 5).until(
-            #         EC.presence_of_element_located((By.XPATH, '//*[@id="ap_email"]'))
-            #     )
-            #     logger.warning("Cookies expired -> Logging in again...")
-            #     return False
-            # except: 
-            #     logger.info("Session is active -> Skipping login!..")
             return True
         return False
     
