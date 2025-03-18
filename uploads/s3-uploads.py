@@ -12,7 +12,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(r"logs\s3-uploads.log", encoding="utf-8"),
+        logging.FileHandler(r"C:\Users\d.tanubudhi\amazon_sales_estimation\logs\s3-uploads.log", encoding="utf-8"),
         logging.StreamHandler(sys.stdout),
     ],
 )
