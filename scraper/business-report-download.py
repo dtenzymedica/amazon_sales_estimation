@@ -28,8 +28,8 @@ load_dotenv()
 
 # CONFIGURATION
 CONFIG = {
-    "download_path": os.path.join(os.getcwd(), "reports"),
-    "cookies_path": os.path.join(os.getcwd(), "cookies.json"),
+    "download_path": r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports",
+    "cookies_path": r"C:\Users\d.tanubudhi\amazon_sales_estimation\cookies.json",
     "login_url": os.getenv("LOGIN_URL"),
     "credentials": {
         "email": os.getenv("AMAZON_SELLER_EMAIL"),
@@ -66,6 +66,9 @@ class BusinessReportDownloads:
             for cookie in cookies:
                 self.driver.add_cookie(cookie)
             logger.info("Cookies loaded successfully -> Skipping login!")
+
+            self.random_delay(2, 4)
+            self.driver.refresh()
             return True
         return False
     
@@ -213,7 +216,7 @@ if __name__ == "__main__":
         getreports.navigate_to_reports()
 
         today = datetime.today()
-        for i in range(1):
+        for i in range(7):
             date = today - timedelta(days=i+1)
             formatted_start_date = date.strftime("%m/%d/%Y")
             formatted_end_date = date.strftime("%m/%d/%Y")
