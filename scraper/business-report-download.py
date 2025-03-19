@@ -28,8 +28,8 @@ load_dotenv()
 
 # CONFIGURATION
 CONFIG = {
-    "download_path": r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports",
-    "cookies_path": r"C:\Users\d.tanubudhi\amazon_sales_estimation\cookies.json",
+    "download_path": os.path.join(os.getcwd(), "reports"),
+    "cookies_path": os.path.join(os.getcwd(), "cookies.json"),
     "login_url": os.getenv("LOGIN_URL"),
     "credentials": {
         "email": os.getenv("AMAZON_SELLER_EMAIL"),

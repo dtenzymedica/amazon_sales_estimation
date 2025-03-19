@@ -2,6 +2,7 @@ pipeline {
     agent any
     
     environment {
+        ENV_FILE = "${WORKSPACE}/.env"
         PYTHON_PATH = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\venv\\Scripts\\python.exe"
     }
     
@@ -13,36 +14,44 @@ pipeline {
                 echo "Repository cloned successfully..."
             }
         }
-        
+        stage('Load Environment Variables') {
+            steps {
+                script {
+                    def envVars = readFile(ENV_FILE).trim().split("\n")
+                    envVars.each { line ->
+                        def keyValue = line.split("=")
+                        if (keyValue.length == 2) {
+                            env[keyValue[0]] = keyValue[1].trim()
+                        }
+                    }
+                }
+                echo "Environment variables loaded successfully!"
+            }
+        }
         stage('Getting reports') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    script {
-                        echo "Downloading reports from Amazon Seller Central..."
-                        bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\scraper\\business-report-download.py\""
-                    }
+                script {
+                    echo "Downloading reports from Amazon Seller Central..."
+                    bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\scraper\\business-report-download.py\""
                 }
             }
         }
         
         stage('Data Cleaning') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    script {
-                        echo "Cleaning data after downloading reports..."
-                        bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\scraper\\data-cleaning.py\""
-                    }
+                script {
+                    echo "Cleaning data after downloading reports..."
+                    bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\scraper\\data-cleaning.py\""
                 }
+
             }
         }
         
         stage('S3 Uploads') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    script {
-                        echo "Uploading output reports to S3..."
-                        bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\uploads\\s3-uploads.py\""
-                    }
+                script {
+                    echo "Uploading output reports to S3..."
+                    bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\uploads\\s3-uploads.py\""
                 }
             }
         }
