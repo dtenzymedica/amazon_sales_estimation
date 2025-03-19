@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class DataProcessing:
     def __init__(self):
-        self.report_folder = os.path.join(os.getcwd(), 'reports')
+        self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports'
 
     def get_the_latest_report(self):
         """Getting the latest report file from reports folder using regex."""
