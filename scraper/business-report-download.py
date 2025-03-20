@@ -53,9 +53,7 @@ class BusinessReportDownloads:
         options.add_argument("--disable-gpu") 
         options.add_argument("--window-size=1920,1080")
 
-        chrome_driver_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\chromedriver.exe"
-
-        return webdriver.Chrome(executable_path=chrome_driver_path, options=options)
+        return webdriver.Chrome(options=options)
     
     def random_delay(self, min_seconds=2, max_seconds=5):
         """Add a Random Delay Between Actions to Avoid Detection."""
