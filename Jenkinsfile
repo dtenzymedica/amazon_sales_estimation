@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        ENV_FILE = "${WORKSPACE}/.env"
+        ENV_FILE = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\.env"
         PYTHON_PATH = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\venv\\Scripts\\python.exe"
     }
     
