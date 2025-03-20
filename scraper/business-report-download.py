@@ -51,7 +51,6 @@ class BusinessReportDownloads:
         options.add_argument("--headless")
         options.add_argument("--disable-dev-shm-usage") 
         options.add_argument("--disable-gpu") 
-        options.add_argument("--window-size=1920,1080")
 
         return webdriver.Chrome(options=options)
     
@@ -220,7 +219,7 @@ if __name__ == "__main__":
         getreports.navigate_to_reports()
 
         today = datetime.today()
-        for i in range(7):
+        for i in range(2):
             date = today - timedelta(days=i+1)
             formatted_start_date = date.strftime("%m/%d/%Y")
             formatted_end_date = date.strftime("%m/%d/%Y")

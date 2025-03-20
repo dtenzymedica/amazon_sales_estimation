@@ -55,11 +55,10 @@ class DataProcessing:
             material_master_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\Enzymedica - Material Master 03172025.xlsx"
             dff = pd.read_excel(material_master_path, sheet_name='All ASINs with Priority')
             dff = dff[['seller-sku', 'ASIN']].rename(columns={'seller-sku': 'sku'})
-            dff['sku'] = dff['sku'].str.replace('FFP', '').replace(' FFP', '')
             logger.info("Completed loading Material Master file.")
             return dff
         except Exception as e:
-            logger.warning("Couldn't read Material Master file.")
+            logger.warning(f"Couldn't read Material Master file. {e}")
             return pd.DataFrame()
 
     def read_csv(self):
@@ -76,11 +75,9 @@ class DataProcessing:
 
         df.columns = df.columns.str.replace(' ', '_').str.replace('/', '_')
 
-        df['data_time'] = pd.to_datetime(df['date/time'], errors='coerce')
+        df['data_time'] = pd.to_datetime(df['date_time'], errors='coerce')
 
         df = df.dropna(subset=['sku']).reset_index(drop=True)
-
-        df['sku'] = df['sku'].str.replace(r'\s*FFP\s*', '', regex=True)
 
         numerical_columns = [
             'quantity', 'product_sales', 'product_sales_tax', 'shipping_credits',
