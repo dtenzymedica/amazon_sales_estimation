@@ -5,7 +5,7 @@ pipeline {
         ENV_FILE = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\.env"
         PYTHON_PATH = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\venv\\Scripts\\python.exe"
     }
-    
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -14,20 +14,22 @@ pipeline {
                 echo "Repository cloned successfully..."
             }
         }
+
         stage('Load Environment Variables') {
             steps {
                 script {
-                    def envVars = readFile(ENV_FILE).trim().split("\n")
-                    envVars.each { line ->
+                    def envVars = readFile(ENV_FILE).trim().split("\n").collect { line ->
                         def keyValue = line.split("=")
-                        if (keyValue.length == 2) {
-                            env[keyValue[0]] = keyValue[1].trim()
-                        }
+                        return keyValue.length == 2 ? "${keyValue[0]}=${keyValue[1].trim()}" : null
+                    }.findAll { it != null }  
+
+                    withEnv(envVars) {
+                        echo "Environment variables loaded successfully!"
                     }
                 }
-                echo "Environment variables loaded successfully!"
             }
         }
+
         stage('Getting reports') {
             steps {
                 script {
@@ -43,7 +45,6 @@ pipeline {
                     echo "Cleaning data after downloading reports..."
                     bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\scraper\\data-cleaning.py\""
                 }
-
             }
         }
         
@@ -56,7 +57,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         success {
             echo 'Pipeline executed successfully. Files uploaded to AWS S3 bucket (amazon_sales_estimation).'
