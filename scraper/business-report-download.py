@@ -48,8 +48,14 @@ class BusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # options.add_argument("--headless")
-        return webdriver.Chrome(options=options)
+        options.add_argument("--headless")
+        options.add_argument("--disable-dev-shm-usage") 
+        options.add_argument("--disable-gpu") 
+        options.add_argument("--window-size=1920,1080")
+
+        chrome_driver_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\chromedriver.exe"
+
+        return webdriver.Chrome(executable_path=chrome_driver_path, options=options)
     
     def random_delay(self, min_seconds=2, max_seconds=5):
         """Add a Random Delay Between Actions to Avoid Detection."""
