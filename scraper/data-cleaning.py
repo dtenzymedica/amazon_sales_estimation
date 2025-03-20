@@ -31,21 +31,22 @@ class DataProcessing:
         for file in files:
             match = FILE_PATTERN.search(file)
             if match:
-                date_str = match.group(1) 
+                date_str = match.group(1)  # Extract first date
                 try:
-                    date_obj = datetime.strptime(date_str, "%Y%b%d") 
-                    valid_files.append((date_obj, file))
+                    date_obj = datetime.strptime(date_str, "%Y%b%d")
+                    valid_files.append((date_obj, file, date_str))
                 except ValueError:
                     logger.warning(f"Skipping invalid date format in filename: {file}")
 
         if not valid_files:
             logger.info("No valid report file found.")
-            return None
+            return None, None
 
-        latest_file = max(valid_files, key=lambda x: x[0])[1]
-        latest_file_path = os.path.join(self.report_folder, latest_file)
-        logger.info(f"Latest report found: {latest_file_path}")
-        return latest_file_path
+        latest_file = max(valid_files, key=lambda x: x[0])
+        latest_file_path = os.path.join(self.report_folder, latest_file[1])
+        extracted_date = latest_file[2]
+        logger.info(f"Latest report found: {latest_file_path} with extracted date {extracted_date}")
+        return latest_file_path, extracted_date
     
     def read_material_master(self):
         """Material Master file to merge the reports."""
@@ -58,11 +59,12 @@ class DataProcessing:
             logger.info("Completed loading Material Master file.")
             return dff
         except Exception as e:
-            logger.warning("Couldn't able to read Material Master file.")
+            logger.warning("Couldn't read Material Master file.")
+            return pd.DataFrame()
 
     def read_csv(self):
         """Reads and processes the latest report file."""
-        latest_file = self.get_the_latest_report()
+        latest_file, extracted_date = self.get_the_latest_report()
         if not latest_file:
             logger.error("No valid report file found. Exiting process.")
             return
@@ -72,7 +74,7 @@ class DataProcessing:
 
         df = df[~df['type'].isin(['Amazon Fees', 'FBA Inventory Fee'])]
 
-        df.columns = df.columns.str.replace(' ', '_')
+        df.columns = df.columns.str.replace(' ', '_').str.replace('/', '_')
 
         df['data_time'] = pd.to_datetime(df['date/time'], errors='coerce')
 
@@ -107,41 +109,39 @@ class DataProcessing:
             df.get('promotional_rebates_tax', 0).astype(float)
         ).round(2)
 
-        # df['amazon_fee'] = (
-        #     df.get('marketplace_withheld_tax', 0).astype(float) +
-        #     df.get('selling_fees', 0).astype(float)
-        # ).round(2)
+        df['amazon_fee'] = (
+            df.get('marketplace_withheld_tax', 0).astype(float) +
+            df.get('selling_fees', 0).astype(float) +
+            df.get('fba_fees').astype(float)
+        ).round(2)
 
         # Remove unwanted columns
         columns_to_remove = [
             'product_sales', 'product_sales_tax', 'shipping_credits',
             'shipping_credits_tax', 'gift_wrap_credits', 'giftwrap_credits_tax', 'Regulatory_Fee',
             'Tax_On_Regulatory_Fee', 'promotional_rebates', 'promotional_rebates_tax',
-            'marketplace_withheld_tax', 'selling_fees', 'data_time'
+            'marketplace_withheld_tax', 'data_time'
         ]
 
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 
         material_master = self.read_material_master()
-
         df = df.merge(material_master, on='sku', how='left')
 
         rearrange_columns = [
-            'date/time','settlement_id','type','order_id','sku','ASIN', 'description','quantity','marketplace',
-            'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model','fba_fees',
-            'other_transaction_fees','other','total','sales','discounts'
-
+            'date_time','settlement_id','type','order_id','sku','ASIN', 'description','quantity','marketplace',
+            'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
+            'other_transaction_fees','other','sales', 'discounts', 'amazon_fee', 'total'
         ]
 
         existing_columns = [col for col in rearrange_columns if col in df.columns]
-        
         df = df[existing_columns]
 
-        # Save processed file
-        current_date = datetime.now().strftime("%Y-%m-%d")
+        formatted_date = datetime.strptime(extracted_date, "%Y%b%d").strftime("%Y-%m-%d")
+
         output_folder = os.path.join(os.getcwd(), "outputfiles")
         os.makedirs(output_folder, exist_ok=True)
-        output_file_path = os.path.join(output_folder, f"transaction_data_{current_date}.csv")
+        output_file_path = os.path.join(output_folder, f"transaction_data_{formatted_date}.csv")
 
         df.to_csv(output_file_path, index=False)
         logger.info(f"Cleaned data saved to: {output_file_path}")

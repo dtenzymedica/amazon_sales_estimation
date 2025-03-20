@@ -48,7 +48,7 @@ class BusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         return webdriver.Chrome(options=options)
     
     def random_delay(self, min_seconds=2, max_seconds=5):
@@ -122,8 +122,8 @@ class BusinessReportDownloads:
             us_button.click()
             logger.info("Clicked on US button")
 
-            select_button = WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="sc-content-container"]/div/div[2]/button')))
+            select_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="sc-content-container"]/div/div[2]/div[2]/button')))
             select_button.click()
             logger.info("Clicked on 'Select Account' button")
         except:
