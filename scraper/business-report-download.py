@@ -48,9 +48,7 @@ class BusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--headless")
-        options.add_argument("--disable-dev-shm-usage") 
-        options.add_argument("--disable-gpu") 
+        # options.add_argument("--headless")
 
         return webdriver.Chrome(options=options)
     
@@ -102,6 +100,7 @@ class BusinessReportDownloads:
                     EC.presence_of_element_located((By.NAME, "otpCode"))
                 )
                 otp_code = input("Enter OTP Code: ")
+                self.random_delay(2, 4)
                 otp_input.send_keys(otp_code, Keys.RETURN)
                 self.random_delay(2, 4)
             except:
