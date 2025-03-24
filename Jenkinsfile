@@ -29,30 +29,11 @@ pipeline {
                 }
             }
         }
-
-        stage('Getting reports') {
+        stage('Running Pipeline') {
             steps {
                 script {
-                    echo "Downloading reports from Amazon Seller Central..."
-                    bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\scraper\\business-report-download.py\""
-                }
-            }
-        }
-        
-        stage('Data Cleaning') {
-            steps {
-                script {
-                    echo "Cleaning data after downloading reports..."
-                    bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\scraper\\data-cleaning.py\""
-                }
-            }
-        }
-        
-        stage('S3 Uploads') {
-            steps {
-                script {
-                    echo "Uploading output reports to S3..."
-                    bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\uploads\\s3-uploads.py\""
+                    echo "Excuting the pipeline"
+                    bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\uploads\\processor.py\""
                 }
             }
         }
