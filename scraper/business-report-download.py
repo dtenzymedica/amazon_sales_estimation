@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import json
+import pyotp
 import random
 import logging
 from dotenv import load_dotenv
@@ -33,7 +34,8 @@ CONFIG = {
     "login_url": os.getenv("LOGIN_URL"),
     "credentials": {
         "email": os.getenv("AMAZON_SELLER_EMAIL"),
-        "password": os.getenv("AMAZON_SELLER_PASSWORD")
+        "password": os.getenv("AMAZON_SELLER_PASSWORD"),
+        "totp_secret": os.getenv("TOTP_SECRET")  
     },
 }
 
@@ -79,6 +81,18 @@ class BusinessReportDownloads:
             json.dump(self.driver.get_cookies(), f, indent=2)
         logger.info("Cookies saved successfully!")
 
+    def generate_otp(self):
+        """Generate OTP using PyOTP"""
+        totp_secret = CONFIG["credentials"]["totp_secret"]
+        if not totp_secret:
+            logger.error("TOTP Secret not found in environment variables.")
+            return None
+
+        totp = pyotp.TOTP(totp_secret)
+        otp_code = totp.now()
+        logger.info(f"Generated OTP: {otp_code}")
+        return otp_code
+
     def login(self):
         """Handle Login and MFA (if required)."""
         self.driver.get(CONFIG["login_url"])
@@ -96,16 +110,19 @@ class BusinessReportDownloads:
 
             # Handle OTP/MFA manually
             try:
-                otp_input = WebDriverWait(self.driver, 5).until(
+                otp_input = WebDriverWait(self.driver, 10).until(
                     EC.presence_of_element_located((By.NAME, "otpCode"))
                 )
-                otp_code = input("Enter OTP Code: ")
-                self.random_delay(2, 4)
-                otp_input.send_keys(otp_code, Keys.RETURN)
-                self.random_delay(2, 4)
+                otp_code = self.generate_otp()  # Generate OTP dynamically
+                if otp_code:
+                    otp_input.send_keys(otp_code, Keys.RETURN)
+                    self.random_delay(5, 10)
+                else:
+                    logger.error("Failed to generate OTP")
+                    return
             except:
                 logger.info("No OTP required")
-            
+
             self.save_cookies()
             logger.info("Login was successful!")
 
@@ -193,7 +210,7 @@ class BusinessReportDownloads:
                 time.sleep(2)
 
                 # Check if Download Button Exists
-                download_button = WebDriverWait(self.driver, 2).until(
+                download_button = WebDriverWait(self.driver, 5).until(
                     EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/article[3]/section/div/kat-card/div/div/div/div[1]/kat-table/kat-table-body/kat-table-row[1]/kat-table-cell[8]/div/kat-button'))
                 )
                 if download_button:
