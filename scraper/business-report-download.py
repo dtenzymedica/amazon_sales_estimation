@@ -159,9 +159,17 @@ class BusinessReportDownloads:
 
     def expand_shadow_element(self, selector):
         """Expands Shadow DOM and Returns the Input Element Inside."""
-        shadow_host = self.driver.find_element(By.CSS_SELECTOR, selector)
-        shadow_root = self.driver.execute_script("return arguments[0].shadowRoot", shadow_host)
-        return shadow_root.find_element(By.CSS_SELECTOR, "input")
+        try:
+            WebDriverWait(self.driver, 15).until(
+                lambda d: d.execute_script("return document.querySelector(arguments[0]) !== null", selector)
+            )
+            shadow_host = self.driver.find_element(By.CSS_SELECTOR, selector)
+            shadow_root = self.driver.execute_script("return arguments[0].shadowRoot", shadow_host)
+            return shadow_root.find_element(By.CSS_SELECTOR, "input")
+        except:
+            logger.warning(f"Failed to expand shadow element '{selector}': {e}")
+            return None
+            
 
     def set_date_range(self, start_date, end_date):
         """Set Date Range in the Shadow DOM Date Picker."""
@@ -208,11 +216,13 @@ class BusinessReportDownloads:
                 refresh_button.click()
                 logger.info("Clicked 'Refresh' button...")
                 time.sleep(2)
-
+                
+                
                 # Check if Download Button Exists
-                download_button = WebDriverWait(self.driver, 5).until(
+                download_button = WebDriverWait(self.driver, 15).until(
                     EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/article[3]/section/div/kat-card/div/div/div/div[1]/kat-table/kat-table-body/kat-table-row[1]/kat-table-cell[8]/div/kat-button'))
                 )
+                logger.info("Download button found.")
                 if download_button:
                     logger.info("Report is ready! Clicking 'Download CSV' button...")
                     download_button.click()
