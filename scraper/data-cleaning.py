@@ -91,26 +91,7 @@ class DataProcessing:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce')
 
-        df['sales'] = (
-            df.get('product_sales', 0).astype(float) +
-            df.get('product_sales_tax', 0).astype(float) +
-            df.get('shipping_credits', 0).astype(float) +
-            df.get('shipping_credits_tax', 0).astype(float) +
-            df.get('gift_wrap_credits', 0).astype(float) +
-            df.get('giftwrap_credits_tax', 0).astype(float) +
-            df.get('Regulatory_Fee', 0).astype(float)
-        ).round(2)
-
-        df['discounts'] = (
-            df.get('promotional_rebates', 0).astype(float) + 
-            df.get('promotional_rebates_tax', 0).astype(float)
-        ).round(2)
-
-        df['amazon_fee'] = (
-            df.get('marketplace_withheld_tax', 0).astype(float) +
-            df.get('selling_fees', 0).astype(float) +
-            df.get('fba_fees').astype(float)
-        ).round(2)
+        df['sales'] = df.get('product_sales', 0).astype(float).round(2)
 
         # Remove unwanted columns
         columns_to_remove = [
@@ -128,7 +109,7 @@ class DataProcessing:
         rearrange_columns = [
             'date_time','settlement_id','type','order_id','sku','ASIN', 'description','quantity','marketplace',
             'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
-            'other_transaction_fees','other','sales', 'discounts', 'amazon_fee', 'total'
+            'other_transaction_fees','other','sales'
         ]
 
         existing_columns = [col for col in rearrange_columns if col in df.columns]
