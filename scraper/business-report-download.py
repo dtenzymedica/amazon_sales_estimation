@@ -236,11 +236,12 @@ class BusinessReportDownloads:
 if __name__ == "__main__":
     getreports = BusinessReportDownloads()
     try:
-        if getreports.load_cookies():
-            logger.info("Cookies found, Skipping login!")
-        else:
-            logger.info("No valid cookies found -> Logging in!..")
-            getreports.login()
+        # if getreports.load_cookies():
+        #     logger.info("Cookies found, Skipping login!")
+        # else:
+        #     logger.info("No valid cookies found -> Logging in!..")
+        #     getreports.login()
+        getreports.login()
 
         getreports.navigate_to_reports()
 
