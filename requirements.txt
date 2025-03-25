@@ -12,4 +12,5 @@ boto3
 captcha-solver
 amazoncaptcha
 python_anticaptcha
+apache-airflow
 # .\venv\Scripts\Activate.ps1
