@@ -246,7 +246,7 @@ if __name__ == "__main__":
         getreports.navigate_to_reports()
 
         today = datetime.today()
-        for i in range(2):
+        for i in range(1):
             date = today - timedelta(days=i+1)
             formatted_start_date = date.strftime("%m/%d/%Y")
             formatted_end_date = date.strftime("%m/%d/%Y")
