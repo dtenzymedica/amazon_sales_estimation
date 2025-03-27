@@ -50,7 +50,7 @@ class BusinessReportDownloads:
         options.add_argument("--window-size=1920,1080")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--headless=new") 
+        # options.add_argument("--headless=new") 
         return webdriver.Chrome(options=options)
     
     def random_delay(self, min_seconds=2, max_seconds=5):
@@ -135,6 +135,11 @@ class BusinessReportDownloads:
         self.random_delay(2, 4)
 
         try:
+            select_account = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="sc-content-container"]/div/div[1]/div/div[3]/button')))
+            select_account.click()
+            logger.info("Clicked on Enzymedica Account button")
+
             us_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
                 (By.XPATH, '//*[@id="sc-content-container"]/div/div[1]/div/div/div/div[11]/button')))
             us_button.click()
