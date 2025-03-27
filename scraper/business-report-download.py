@@ -30,7 +30,7 @@ load_dotenv()
 # CONFIGURATION
 CONFIG = {
     "download_path": os.path.join(os.getcwd(), "reports"),
-    "cookies_path": os.path.join(os.getcwd(), "cookies.json"),
+    "cookies_path": r"C:\Users\d.tanubudhi\amazon_sales_estimation\cookies.json",
     "login_url": os.getenv("LOGIN_URL"),
     "credentials": {
         "email": os.getenv("AMAZON_SELLER_EMAIL"),
@@ -50,7 +50,7 @@ class BusinessReportDownloads:
         options.add_argument("--window-size=1920,1080")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # options.add_argument("--headless=new") 
+        options.add_argument("--headless=new") 
         return webdriver.Chrome(options=options)
     
     def random_delay(self, min_seconds=2, max_seconds=5):
