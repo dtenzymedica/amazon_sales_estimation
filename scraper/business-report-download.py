@@ -45,13 +45,12 @@ class BusinessReportDownloads:
         self.driver = self.setup_driver()
 
     def setup_driver(self):
-        """Setup Selenium WebDriver with optimized options."""
         options = Options()
         options.add_argument("--start-maximized")
+        options.add_argument("--window-size=1920,1080")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--headless=new")
-
+        options.add_argument("--headless=new") 
         return webdriver.Chrome(options=options)
     
     def random_delay(self, min_seconds=2, max_seconds=5):
@@ -158,19 +157,22 @@ class BusinessReportDownloads:
             logger.warning("'Skip button' not found")
 
     def expand_shadow_element(self, selector):
-        """Expands Shadow DOM and Returns the Input Element Inside."""
         try:
             WebDriverWait(self.driver, 15).until(
                 lambda d: d.execute_script("return document.querySelector(arguments[0]) !== null", selector)
             )
             shadow_host = self.driver.find_element(By.CSS_SELECTOR, selector)
             shadow_root = self.driver.execute_script("return arguments[0].shadowRoot", shadow_host)
+
+            # Wait for input inside shadow root
+            WebDriverWait(self.driver, 15).until(
+                lambda d: shadow_root.find_element(By.CSS_SELECTOR, "input")
+            )
             return shadow_root.find_element(By.CSS_SELECTOR, "input")
         except Exception as e:
             logger.warning(f"Failed to expand shadow element '{selector}': {e}")
             return None
             
-
     def set_date_range(self, start_date, end_date):
         """Set Date Range in the Shadow DOM Date Picker."""
         logger.info(f"Setting date range: {start_date} -> {end_date}")
