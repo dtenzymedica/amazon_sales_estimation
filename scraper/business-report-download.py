@@ -50,7 +50,7 @@ class BusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
 
         return webdriver.Chrome(options=options)
     
@@ -166,7 +166,7 @@ class BusinessReportDownloads:
             shadow_host = self.driver.find_element(By.CSS_SELECTOR, selector)
             shadow_root = self.driver.execute_script("return arguments[0].shadowRoot", shadow_host)
             return shadow_root.find_element(By.CSS_SELECTOR, "input")
-        except:
+        except Exception as e:
             logger.warning(f"Failed to expand shadow element '{selector}': {e}")
             return None
             
