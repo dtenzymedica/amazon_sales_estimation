@@ -33,7 +33,7 @@ pipeline {
             steps {
                 script {
                     echo "Excuting the pipeline"
-                    bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\uploads\\processor.py\""
+                    bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\uploads\\s3-processor.py\""
                 }
             }
         }
