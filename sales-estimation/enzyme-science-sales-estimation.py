@@ -27,14 +27,13 @@ logger = logging.getLogger(__name__)
 
 class SalesEstimation:
     def __init__(self):
-        self.master_file = r'C:\Users\d.tanubudhi\Documents\EnzymedicaSalesReport.csv'
-        self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports'
+        self.master_file = r'C:\Users\d.tanubudhi\Documents\EnzymeScienceCustomTransaction.csv'
+        self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzyme-science-reports'
         self.material_master_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\Enzymedica - Material Master 03172025.xlsx"
-        self.output_path = r'c:\Users\d.tanubudhi\Documents\sales_report.csv'
-        self.json_path = r'C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sku-asin.json'
+        self.output_path = r'c:\Users\d.tanubudhi\Documents\enzyme_science_sales_report.csv'
 
     def append_latest_report_master_file(self):
-        FILE_PATTERN = re.compile(r"(\d{4}[A-Za-z]{3}\d{2})-(\d{4}[A-Za-z]{3}\d{2})CustomUnifiedTransaction\.csv")
+        FILE_PATTERN = re.compile(r"(\d{4}[A-Za-z]{3}\d{2})-(\d{4}[A-Za-z]{3}\d{2})CustomTransaction\.csv")
         matching_files = [
             f for f in os.listdir(self.report_folder)
             if FILE_PATTERN.match(f)
@@ -47,6 +46,7 @@ class SalesEstimation:
         matching_files_paths = [os.path.join(self.report_folder, f) for f in matching_files]
         latest_file = max(matching_files_paths, key=os.path.getmtime)
         logger.info(f"Latest downloaded file: {latest_file}")
+
         try:
             master_df = pd.read_csv(self.master_file, low_memory=False)
         except ParserError as e:
@@ -60,15 +60,6 @@ class SalesEstimation:
         combined_df = pd.concat([master_df, new_df], ignore_index=True)
         combined_df.to_csv(self.master_file, index=False)
         logger.info("Appended latest report to master successfully.")
-
-    def read_material_master(self):
-        try:
-            dff = pd.read_excel(self.material_master_path, sheet_name='All ASINs with Priority')
-            dff = dff[['seller-sku', 'ASIN']].rename(columns={'seller-sku': 'sku'})
-            return dff
-        except Exception as e:
-            logger.error(f"Failed to read material master: {e}")
-            return pd.DataFrame()
 
     def data_cleaning_on_master_file(self):
         df = pd.read_csv(self.master_file)
@@ -97,16 +88,8 @@ class SalesEstimation:
             'promotional_rebates_tax', 'marketplace_withheld_tax', 'data_time']
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 
-        material_master = self.read_material_master()
-        sku_asin_map = material_master.drop_duplicates(subset='sku').set_index('sku')['ASIN'].to_dict()
-
-        with open(self.json_path, 'w') as f:
-            json.dump(sku_asin_map, f, indent=1)
-
-        df['ASIN'] = df['sku'].map(sku_asin_map)
-
         rearrange_columns = [
-            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'ASIN', 'description','quantity','marketplace',
+            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'description','quantity','marketplace',
             'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
             'other_transaction_fees','other','product_sales']
 
@@ -120,7 +103,7 @@ class SalesEstimation:
         df = pd.read_csv(self.output_path)
         df['date'] = pd.to_datetime(df['date'])
 
-        df_day_sales = df[['date', 'time', 'weekday', 'sku', 'ASIN', 'description', 'product_sales']].copy()
+        df_day_sales = df[['date', 'time', 'weekday', 'sku', 'description', 'product_sales']].copy()
         df_day_sales['product_sales'] = df_day_sales['product_sales'].astype(float)
         df_day_sales['weekday'] = df_day_sales['date'].dt.day_name()
         
@@ -183,8 +166,9 @@ class SalesEstimation:
 
                     avg_total = round(sum(points) / len(points), 2)
                     weekday_avgs[weekday] = avg_total
+                    print(f"{weekday} Final Cascading Avg: {avg_total:.2f}\n")
                 else:
-                    logger.error(f"Not enough records for {weekday} to compute cascading 4-day average.\n")
+                    print(f"Not enough records for {weekday} to compute cascading 4-day average.\n")
 
             return pd.Series(weekday_avgs)
 
@@ -206,9 +190,9 @@ class SalesEstimation:
 
         # Send email to stakeholders
         self.send_sales_estimation_email(
-            subject=f"Amazon Sales Estimation (US Enzymedica) - {month_start.strftime('%B %Y')}",
+            subject=f"Amazon Sales Estimation (US Enzyme Science) - {month_start.strftime('%B %Y')}",
             message=summary_message,
-            to_emails=["d.tanubudhi@enzymedica.com"]
+            to_emails=["d.tanubudhi@enzymedica.com", "b.bechard@enzymedica.com", "g.cabrera@enzymedica.com", "carolyn@enzymedica.com"]
         )
             
     def send_sales_estimation_email(self, subject, message, to_emails):
@@ -227,7 +211,7 @@ class SalesEstimation:
             html_message = f"""
             <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                    <h2> Amazon Sales Estimation Report</h2>
+                    <h2> Enzyme Science US Amazon Sales Estimation Report</h2>
                     <p>{message.replace('\n', '<br>')}</p>
 
                     <p style="margin-top: 20px;">

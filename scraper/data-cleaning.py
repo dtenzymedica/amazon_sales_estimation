@@ -1,6 +1,7 @@
 import re
 import os
 import sys
+import json
 import logging
 import pandas as pd
 from datetime import datetime
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 class DataProcessing:
     def __init__(self):
         self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports'
+        self.json_path = r'C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sku-asin.json'
 
     def get_the_latest_report(self):
         """Getting the latest report file from reports folder using regex."""
@@ -70,47 +72,42 @@ class DataProcessing:
 
         logger.info(f"Reading file: {latest_file}")
         df = pd.read_csv(latest_file, skiprows=7)
-
-        df = df[~df['type'].isin(['Amazon Fees', 'FBA Inventory Fee'])]
-
         df.columns = df.columns.str.replace(' ', '_').str.replace('/', '_')
 
         df['data_time'] = pd.to_datetime(df['date_time'], errors='coerce')
-
-        df = df.dropna(subset=['sku']).reset_index(drop=True)
 
         numerical_columns = [
             'quantity', 'product_sales', 'product_sales_tax', 'shipping_credits',
             'shipping_credits_tax', 'gift_wrap_credits', 'giftwrap_credits_tax', 'Regulatory_Fee',
             'Tax_On_Regulatory_Fee', 'promotional_rebates', 'promotional_rebates_tax',
             'marketplace_withheld_tax', 'selling_fees', 'fba_fees', 'other_transaction_fees',
-            'other', 'total'
-        ]
+            'other', 'total']
 
         for col in numerical_columns:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce')
 
-        df['sales'] = df.get('product_sales', 0).astype(float).round(2)
+        df['product_sales'] = df['product_sales'].astype(float).round(2)
 
         # Remove unwanted columns
         columns_to_remove = [
-            'product_sales', 'product_sales_tax', 'shipping_credits',
-            'shipping_credits_tax', 'gift_wrap_credits', 'giftwrap_credits_tax', 'Regulatory_Fee',
-            'Tax_On_Regulatory_Fee', 'promotional_rebates', 'promotional_rebates_tax',
-            'marketplace_withheld_tax', 'data_time'
-        ]
-
+            'product_sales_tax', 'shipping_credits', 'shipping_credits_tax', 'gift_wrap_credits',
+            'giftwrap_credits_tax', 'Regulatory_Fee', 'Tax_On_Regulatory_Fee', 'promotional_rebates',
+            'promotional_rebates_tax', 'marketplace_withheld_tax', 'data_time']
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 
         material_master = self.read_material_master()
-        df = df.merge(material_master, on='sku', how='left')
+        sku_asin_map = material_master.drop_duplicates(subset='sku').set_index('sku')['ASIN'].to_dict()
+
+        with open(self.json_path, 'w') as f:
+            json.dump(sku_asin_map, f, indent=1)
+
+        df['ASIN'] = df['sku'].map(sku_asin_map)
 
         rearrange_columns = [
-            'date_time','settlement_id','type','order_id','sku','ASIN', 'description','quantity','marketplace',
+            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'ASIN', 'description','quantity','marketplace',
             'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
-            'other_transaction_fees','other','sales'
-        ]
+            'other_transaction_fees','other','product_sales']
 
         existing_columns = [col for col in rearrange_columns if col in df.columns]
         df = df[existing_columns]
