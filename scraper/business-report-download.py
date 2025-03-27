@@ -50,7 +50,7 @@ class BusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # options.add_argument("--headless")
+        options.add_argument("--headless=new")
 
         return webdriver.Chrome(options=options)
     
