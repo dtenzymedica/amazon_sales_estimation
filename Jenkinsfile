@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         PYTHON_PATH = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\venv\\Scripts\\python.exe"
-        PROCESSOR = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\uploads\\s3-processor.py"
+        PROCESSOR = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\uploads\\scraper-processor.py"
+        EMAIL_PROCESSOR = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\uploads\\email-automation-processor.py"
     }
 
     stages {
@@ -19,6 +20,13 @@ pipeline {
             steps {
                 echo "Running processor script..."
                 bat "\"%PYTHON_PATH%\" \"%PROCESSOR%\""
+            }
+        }
+
+        stage('Email Automation.') {
+            steps {
+                echo "Running processor script..."
+                bat "\"%PYTHON_PATH%\" \"%EMAIL_PROCESSOR%\""
             }
         }
     }
