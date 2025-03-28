@@ -30,7 +30,7 @@ load_dotenv()
 # CONFIGURATION
 CONFIG = {
     "sales_download_path": r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzymedica-sales-reports',
-    "cookies_path": r"C:\Users\d.tanubudhi\amazon_sales_estimation\cookies.json",
+    "cookies_path": os.path.join(os.getcwd(), "cookies.json"),
     "login_url": os.getenv("LOGIN_URL"),
     "credentials": {
         "email": os.getenv("AMAZON_SELLER_EMAIL"),
