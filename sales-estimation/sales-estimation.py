@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class SalesEstimation:
     def __init__(self):
         self.master_file = r'C:\Users\d.tanubudhi\Documents\EnzymedicaSalesReport.csv'
-        self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports'
+        self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzymedica-sales-reports'
         self.material_master_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\Enzymedica - Material Master 03172025.xlsx"
         self.output_path = r'c:\Users\d.tanubudhi\Documents\sales_report.csv'
         self.json_path = r'C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sku-asin.json'
