@@ -50,7 +50,7 @@ class BusinessReportDownloads:
         options.add_argument("--window-size=1920,1080")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # options.add_argument("--headless=new") 
+        options.add_argument("--headless=new") 
         return webdriver.Chrome(options=options)
     
     def random_delay(self, min_seconds=2, max_seconds=5):
