@@ -19,7 +19,8 @@ PYTHON_PATH = r'C:\Users\d.tanubudhi\amazon_sales_estimation\venv\Scripts\python
 SCRIPTS = [
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\business-report-download.py",
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\data-cleaning.py",
-    r"C:\Users\d.tanubudhi\amazon_sales_estimation\uploads\s3-uploads.py"
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\uploads\s3-uploads.py",
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzyme-science-scraper.py"
 ]
 
 def run_scripts():

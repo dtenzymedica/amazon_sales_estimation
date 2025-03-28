@@ -166,9 +166,8 @@ class SalesEstimation:
 
                     avg_total = round(sum(points) / len(points), 2)
                     weekday_avgs[weekday] = avg_total
-                    print(f"{weekday} Final Cascading Avg: {avg_total:.2f}\n")
                 else:
-                    print(f"Not enough records for {weekday} to compute cascading 4-day average.\n")
+                    logger.warning(f"Not enough records for {weekday} to compute cascading 4-day average.\n")
 
             return pd.Series(weekday_avgs)
 
