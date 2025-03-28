@@ -19,7 +19,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(r'C:\Users\d.tanubudhi\amazon_sales_estimation\logs\busniess_reports_scraper.log', encoding='utf-8'),
+        logging.FileHandler(r'C:\Users\d.tanubudhi\amazon_sales_estimation\logs\enzymedica-sales-report-scraper.log', encoding='utf-8'),
         logging.StreamHandler(sys.stdout)]
     )
 logger = logging.getLogger(__name__)
@@ -29,8 +29,8 @@ load_dotenv()
 
 # CONFIGURATION
 CONFIG = {
-    "download_path": os.path.join(os.getcwd(), "reports"),
-    "cookies_path": r"C:\Users\d.tanubudhi\amazon_sales_estimation\cookies.json",
+    "sales_download_path": r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzymedica-sales-reports',
+    "cookies_path": os.path.join(os.getcwd(), "cookies.json"),
     "login_url": os.getenv("LOGIN_URL"),
     "credentials": {
         "email": os.getenv("AMAZON_SELLER_EMAIL"),
@@ -45,12 +45,13 @@ class BusinessReportDownloads:
         self.driver = self.setup_driver()
 
     def setup_driver(self):
+        """Setup Selenium WebDriver with optimized options."""
         options = Options()
         options.add_argument("--start-maximized")
-        options.add_argument("--window-size=1920,1080")
-        options.add_experimental_option("prefs", {"download.default_directory": CONFIG["download_path"]})
+        options.add_experimental_option("prefs", {"download.default_directory": CONFIG["sales_download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # options.add_argument("--headless=new") 
+        options.add_argument("--headless")
+
         return webdriver.Chrome(options=options)
     
     def random_delay(self, min_seconds=2, max_seconds=5):
@@ -135,10 +136,10 @@ class BusinessReportDownloads:
         self.random_delay(2, 4)
 
         try:
-            select_account = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
+            account_select = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
                 (By.XPATH, '//*[@id="sc-content-container"]/div/div[1]/div/div[3]/button')))
-            select_account.click()
-            logger.info("Clicked on Enzymedica Account button")
+            account_select.click()
+            logger.info('Selected Enzymedica account.')
 
             us_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
                 (By.XPATH, '//*[@id="sc-content-container"]/div/div[1]/div/div/div/div[11]/button')))
@@ -162,22 +163,19 @@ class BusinessReportDownloads:
             logger.warning("'Skip button' not found")
 
     def expand_shadow_element(self, selector):
+        """Expands Shadow DOM and Returns the Input Element Inside."""
         try:
             WebDriverWait(self.driver, 15).until(
                 lambda d: d.execute_script("return document.querySelector(arguments[0]) !== null", selector)
             )
             shadow_host = self.driver.find_element(By.CSS_SELECTOR, selector)
             shadow_root = self.driver.execute_script("return arguments[0].shadowRoot", shadow_host)
-
-            # Wait for input inside shadow root
-            WebDriverWait(self.driver, 15).until(
-                lambda d: shadow_root.find_element(By.CSS_SELECTOR, "input")
-            )
             return shadow_root.find_element(By.CSS_SELECTOR, "input")
-        except Exception as e:
+        except:
             logger.warning(f"Failed to expand shadow element '{selector}': {e}")
             return None
             
+
     def set_date_range(self, start_date, end_date):
         """Set Date Range in the Shadow DOM Date Picker."""
         logger.info(f"Setting date range: {start_date} -> {end_date}")
@@ -243,11 +241,6 @@ class BusinessReportDownloads:
 if __name__ == "__main__":
     getreports = BusinessReportDownloads()
     try:
-        # if getreports.load_cookies():
-        #     logger.info("Cookies found, Skipping login!")
-        # else:
-        #     logger.info("No valid cookies found -> Logging in!..")
-        #     getreports.login()
         getreports.login()
 
         getreports.navigate_to_reports()

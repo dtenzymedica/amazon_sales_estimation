@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class DataProcessing:
     def __init__(self):
-        self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports'
+        self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzyme-science-reports'
         self.json_path = r'C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sku-asin.json'
 
     def get_the_latest_report(self):
