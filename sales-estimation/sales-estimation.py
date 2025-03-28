@@ -208,7 +208,8 @@ class SalesEstimation:
         self.send_sales_estimation_email(
             subject=f"Amazon Sales Estimation (US Enzymedica) - {month_start.strftime('%B %Y')}",
             message=summary_message,
-            to_emails=["d.tanubudhi@enzymedica.com"]
+            to_emails=["d.tanubudhi@enzymedica.com", "b.bechard@enzymedica.com", "g.cabrera@enzymedica.com", "carolyn@enzymedica.com"] 
+
         )
             
     def send_sales_estimation_email(self, subject, message, to_emails):
