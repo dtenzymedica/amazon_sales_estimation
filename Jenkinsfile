@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    
+
     environment {
         ENV_FILE = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\.env"
         PYTHON_PATH = "C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\venv\\Scripts\\python.exe"
@@ -21,18 +21,22 @@ pipeline {
                     def envVars = readFile(ENV_FILE).trim().split("\n").collect { line ->
                         def keyValue = line.split("=")
                         return keyValue.length == 2 ? "${keyValue[0]}=${keyValue[1].trim()}" : null
-                    }.findAll { it != null }  
+                    }.findAll { it != null }
 
-                    withEnv(envVars) {
-                        echo "Environment variables loaded successfully!"
+                    envVars.each {
+                        def parts = it.split("=")
+                        env[parts[0]] = parts[1]
                     }
+
+                    echo "Environment variables set for pipeline and subprocesses."
                 }
             }
         }
-        stage('Running Pipeline') {
+
+        stage('Run Main Processor') {
             steps {
                 script {
-                    echo "Excuting the pipeline"
+                    echo "Executing the processor pipeline script..."
                     bat "\"%PYTHON_PATH%\" \"C:\\Users\\d.tanubudhi\\amazon_sales_estimation\\uploads\\s3-processor.py\""
                 }
             }
@@ -41,10 +45,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline executed successfully. Files uploaded to AWS S3 bucket (amazon_sales_estimation).'
+            echo 'Pipeline executed successfully.'
         }
         failure {
-            echo 'Pipeline execution failed. Please check the logs for details.'
+            echo 'Pipeline execution failed. Check logs for details.'
         }
     }
 }
