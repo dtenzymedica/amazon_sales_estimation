@@ -20,7 +20,11 @@ SCRIPTS = [
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzymedica-sales-report-scraper.py",
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\data-cleaning.py",
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\uploads\s3-uploads.py",
-    r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzyme-science-scraper.py"
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzyme-science-scraper.py",
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzymedica_germany.py",
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzymedica-france.py",
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzymedica-italy.py",
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzymedica-spain.py"
 ]
 
 def run_scripts():
