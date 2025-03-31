@@ -19,7 +19,7 @@ logging.basicConfig(
 def send_sales_summary_email():
     try:
         today_str = datetime.today().strftime("%Y-%m-%d")
-        json_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
+        json_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\results.json"
 
         if not os.path.exists(json_path):
             raise FileNotFoundError(f"No JSON file found at {json_path}")
