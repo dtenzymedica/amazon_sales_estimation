@@ -60,7 +60,7 @@ class EuropeBusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["europe_download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
         options.add_argument("--log-level=3") 
 
         return webdriver.Chrome(options=options)
@@ -292,7 +292,7 @@ class EuropeBusinessReportDownloads:
             master_df = pd.read_csv(self.master_file, low_memory=False)
         except ParserError as e:
             if "Expected 1 fields in line 8" in str(e):
-                master_df = pd.read_csv(self.master_file, skiprows=8, low_memory=False)
+                master_df = pd.read_csv(self.master_file, skiprows=7, low_memory=False)
                 logger.warning("ParserError encountered. Retried reading file with skiprows=7.")
             else:
                 raise e

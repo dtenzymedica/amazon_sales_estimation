@@ -130,9 +130,9 @@ class SalesEstimation:
             msg['From'] = sender_email
             msg['To'] = ", ".join([
                 "d.tanubudhi@enzymedica.com"
-                # "b.bechard@enzymedica.com",
-                # "g.cabrera@enzymedica.com",
-                # "carolyn@enzymedica.com"
+                "b.bechard@enzymedica.com",
+                "g.cabrera@enzymedica.com",
+                "carolyn@enzymedica.com"
             ])
             msg['Subject'] = subject
 

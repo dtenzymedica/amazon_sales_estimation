@@ -49,7 +49,7 @@ class EuropeBusinessReportDownloads:
         self.driver = self.setup_driver()
         self.master_file = r"C:\Users\d.tanubudhi\Documents\SpainCustomTransaction.csv"
         self.report_folder = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\europe-sales-reports\spain"
-        self.output_file = r"C:\Users\d.tanubudhi\amazon_sales_estimation\test.csv"
+        self.output_file = r"C:\Users\d.tanubudhi\Documents\SpainSalesReport.csv"
 
     def setup_driver(self):
         """Setup Selenium WebDriver with optimized options."""
