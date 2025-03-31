@@ -19,7 +19,7 @@ logging.basicConfig(
 def send_sales_summary_email():
     try:
         today_str = datetime.today().strftime("%Y-%m-%d")
-        json_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\results.json"
+        json_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
 
         if not os.path.exists(json_path):
             raise FileNotFoundError(f"No JSON file found at {json_path}")
@@ -127,10 +127,10 @@ def send_sales_summary_email():
         sender_email = "d.tanubudhi@enzymedica.com"
         sender_password = os.getenv("EMAIL_PASSWORD")
         recipients = [
-            "d.tanubudhi@enzymedica.com"
-            # "b.bechard@enzymedica.com",
-            # "g.cabrera@enzymedica.com",
-            # "carolyn@enzymedica.com"
+            "d.tanubudhi@enzymedica.com",
+            "b.bechard@enzymedica.com",
+            "g.cabrera@enzymedica.com",
+            "carolyn@enzymedica.com"
         ]
 
         msg = MIMEMultipart()
