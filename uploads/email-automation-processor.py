@@ -17,8 +17,8 @@ logging.basicConfig(
 
 PYTHON_PATH = r'C:\Users\d.tanubudhi\amazon_sales_estimation\venv\Scripts\python.exe'
 SCRIPTS = [
-    # r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales-estimation.py",
-    # r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\enzyme-science-sales-estimation.py",
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales-estimation.py",
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\enzyme-science-sales-estimation.py",
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\eu-sales-estimation.py"
 ]
 
