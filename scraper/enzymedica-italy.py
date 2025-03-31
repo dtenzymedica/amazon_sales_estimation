@@ -60,7 +60,7 @@ class EuropeBusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["europe_download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_argument("--log-level=3") 
 
         return webdriver.Chrome(options=options)
@@ -292,7 +292,7 @@ class EuropeBusinessReportDownloads:
             master_df = pd.read_csv(self.master_file, low_memory=False)
         except ParserError as e:
             if "Expected 1 fields in line 8" in str(e):
-                master_df = pd.read_csv(self.master_file, skiprows=7, low_memory=False)
+                master_df = pd.read_csv(self.master_file, skiprows=8, low_memory=False)
                 logger.warning("ParserError encountered. Retried reading file with skiprows=7.")
             else:
                 raise e
@@ -390,23 +390,23 @@ class EuropeBusinessReportDownloads:
 if __name__ == "__main__":
     getreports = EuropeBusinessReportDownloads()
     try:
-        # getreports.login()
-        # getreports.navigate_to_reports()
+        getreports.login()
+        getreports.navigate_to_reports()
 
-        # today = datetime.today()
-        # for i in range(1):
-        #     date = today - timedelta(days=i+1)
-        #     formatted_start_date = date.strftime("%m/%d/%Y")
-        #     formatted_end_date = date.strftime("%m/%d/%Y")
+        today = datetime.today()
+        for i in range(1):
+            date = today - timedelta(days=i+1)
+            formatted_start_date = date.strftime("%m/%d/%Y")
+            formatted_end_date = date.strftime("%m/%d/%Y")
 
-        #     getreports.set_date_range(formatted_start_date, formatted_end_date)
-        #     getreports.request_report()
-        #     getreports.wait_for_report()
-        #     getreports.rename_latest_download()
-        #     time.sleep(3)
-        #     getreports.append_latest_report_master_file()
-        #     time.sleep(2)
-        getreports.data_cleaning_on_master_file()
+            getreports.set_date_range(formatted_start_date, formatted_end_date)
+            getreports.request_report()
+            getreports.wait_for_report()
+            getreports.rename_latest_download()
+            time.sleep(3)
+            getreports.append_latest_report_master_file()
+            time.sleep(2)
+            getreports.data_cleaning_on_master_file()
 
         logger.info("Italy reports downloaded successfully!")
     except Exception as e:

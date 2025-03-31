@@ -378,23 +378,23 @@ class EuropeBusinessReportDownloads:
 if __name__ == "__main__":
     getreports = EuropeBusinessReportDownloads()
     try:
-        # getreports.login()
-        # getreports.navigate_to_reports()
+        getreports.login()
+        getreports.navigate_to_reports()
 
-        # today = datetime.today()
-        # for i in range(1):
-        #     date = today - timedelta(days=i+1)
-        #     formatted_start_date = date.strftime("%m/%d/%Y")
-        #     formatted_end_date = date.strftime("%m/%d/%Y")
+        today = datetime.today()
+        for i in range(1):
+            date = today - timedelta(days=i+1)
+            formatted_start_date = date.strftime("%m/%d/%Y")
+            formatted_end_date = date.strftime("%m/%d/%Y")
 
-        #     getreports.set_date_range(formatted_start_date, formatted_end_date)
-        #     getreports.request_report()
-        #     getreports.wait_for_report()
-        #     getreports.rename_latest_download()
-        #     time.sleep(3)
-        #     getreports.append_latest_report_master_file()
-        #     time.sleep(2)
-        getreports.data_cleaning_on_master_file()
+            getreports.set_date_range(formatted_start_date, formatted_end_date)
+            getreports.request_report()
+            getreports.wait_for_report()
+            getreports.rename_latest_download()
+            time.sleep(3)
+            getreports.append_latest_report_master_file()
+            time.sleep(2)
+            getreports.data_cleaning_on_master_file()
 
         logger.info("France reports downloaded successfully!")
     except Exception as e:
