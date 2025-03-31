@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import smtplib
 import warnings
 import pandas as pd
@@ -32,15 +33,13 @@ class SalesEstimation:
 
     def multi_country_sales_estimation(self, selected_date):
         today = datetime.today()
+        today_str = today.strftime("%Y-%m-%d")
         month_start = datetime(today.year, today.month, 1)
         month_cutoff = datetime(today.year, today.month, selected_date - 1)
         month_end = pd.Timestamp(month_start) + pd.offsets.MonthEnd(1)
 
-        summary_message = (
-            f"<p>This is the consolidated <strong>Amazon EU sales estimation</strong> report for the following markets:</p>"
-            f"<ul>{''.join([f'<li>{country}</li>' for country in self.master_files.keys()])}</ul>"
-            f"<p>The report includes actual and estimated sales data for the month of <strong>{month_start.strftime('%B %Y')}</strong>.</p><br>"
-        )
+        output_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
+        all_results = []
 
         for country, file_path in self.master_files.items():
             try:
@@ -59,7 +58,6 @@ class SalesEstimation:
 
                 def get_dynamic_last_4_day_averages(df_estimation, cutoff_date):
                     df_filtered = df_estimation[df_estimation['date'] < cutoff_date].copy()
-                    df_filtered['date'] = pd.to_datetime(df_filtered['date'])
                     df_filtered['weekday'] = df_filtered['date'].dt.day_name()
 
                     df_grouped = (
@@ -77,89 +75,64 @@ class SalesEstimation:
 
                         if len(weekday_rows) >= 4:
                             points = []
-                            day1 = weekday_rows.loc[0:3, 'product_sales'].mean()
-                            points.append(day1)
-
+                            points.append(weekday_rows.loc[0:3, 'product_sales'].mean())
                             if len(weekday_rows) >= 5:
                                 vals = list(weekday_rows.loc[1:3, 'product_sales']) + [weekday_rows.loc[4, 'product_sales']]
                                 points.append(sum(vals) / 4)
-
                             if len(weekday_rows) >= 6:
                                 vals = list(weekday_rows.loc[2:3, 'product_sales']) + list(weekday_rows.loc[4:5, 'product_sales'])
                                 points.append(sum(vals) / 4)
-
                             if len(weekday_rows) >= 7:
                                 vals = [weekday_rows.loc[3, 'product_sales']] + list(weekday_rows.loc[4:6, 'product_sales']) + [weekday_rows.loc[0, 'product_sales']]
                                 points.append(sum(vals) / 4)
 
-                            avg_total = round(sum(points) / len(points), 2)
-                            weekday_avgs[weekday] = avg_total
+                            weekday_avgs[weekday] = round(sum(points) / len(points), 2)
 
                     return pd.Series(weekday_avgs)
 
                 weekday_avg_sales = get_dynamic_last_4_day_averages(df_day_sales, month_cutoff + timedelta(days=1))
-
                 remaining_days = pd.date_range(start=month_cutoff + timedelta(days=1), end=month_end)
                 remaining_weekdays = remaining_days.day_name()
 
                 remaining_sales_estimate = pd.Series(remaining_weekdays.map(weekday_avg_sales)).sum()
                 total_estimate = actual_sales_to_date + remaining_sales_estimate
 
-                summary_message += (
-                    f"<h3>{country}</h3>"
-                    f"<p>Actual sales (from {month_start.date()} to {month_cutoff.date()}): ${actual_sales_to_date:,.2f} <br>"
-                    f"Estimated sales (from {(month_cutoff + timedelta(days=1)).date()} to {month_end.date()}): ${remaining_sales_estimate:,.2f} <br>"
-                    f"Estimated Total {month_start.strftime('%B %Y')} Sales: ${total_estimate:,.2f}</p><br>"
-                )
+                result = {
+                    "market": f"Enzymedica EU - {country}",
+                    "actual_sales": round(actual_sales_to_date, 2),
+                    "estimated_sales": round(remaining_sales_estimate, 2),
+                    "total_estimation": round(total_estimate, 2)
+                }
+
+                all_results.append(result)
 
             except Exception as e:
                 logger.warning(f"Error processing {country}: {e}")
-                summary_message += f"<h3>{country}</h3><p><strong style='color:red;'>Error: {e}</strong></p><br>"
 
-        subject = f"Amazon EU Sales Estimation – {', '.join(self.master_files.keys())} – {month_start.strftime('%B %Y')}"
-        self.send_sales_estimation_email(subject, summary_message)
-
-    def send_sales_estimation_email(self, subject, message):
         try:
-            smtp_server = "smtp.office365.com"
-            smtp_port = 587
-            sender_email = "d.tanubudhi@enzymedica.com"
-            sender_password = os.getenv("EMAIL_PASSWORD")
+            if os.path.exists(output_path):
+                with open(output_path, 'r') as f:
+                    all_data = json.load(f)
+            else:
+                all_data = {}
 
-            msg = MIMEMultipart()
-            msg['From'] = sender_email
-            msg['To'] = ", ".join([
-                "d.tanubudhi@enzymedica.com"
-                "b.bechard@enzymedica.com",
-                "g.cabrera@enzymedica.com",
-                "carolyn@enzymedica.com"
-            ])
-            msg['Subject'] = subject
+            if today_str not in all_data:
+                all_data[today_str] = []
 
-            html_message = f"""
-            <html>
-                <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-                    <h2>Amazon EU Sales Estimation Report</h2>
-                    {message}
-                    <p style='margin-top: 20px;'>
-                        <strong>Note:</strong> This report is auto-generated by the Amazon Sales Automation system.
-                    </p>
-                    <p style='margin-top: 40px;'>Best regards,<br><strong>Automation Bot</strong></p>
-                </body>
-            </html>
-            """
-            msg.attach(MIMEText(html_message, 'html'))
+            # Remove old Enzymedica EU entries
+            all_data[today_str] = [
+                x for x in all_data.get(today_str, [])
+                if not x["market"].startswith("Enzymedica EU")
+            ]
 
-            server = smtplib.SMTP(smtp_server, smtp_port)
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
-            server.quit()
+            # Append new EU results
+            all_data[today_str].extend(all_results)
 
-            logger.info("Sales estimation email sent successfully.")
-
+            with open(output_path, 'w') as f:
+                json.dump(all_data, f, indent=2)
+            logger.info(f"Saved all EU sales estimation results to {output_path}")
         except Exception as e:
-            logger.error(f"Failed to send email: {e}")
+            logger.error(f"Failed to write EU results JSON: {e}")
 
 if __name__ == "__main__":
     logger.info("Starting EU Sales Estimation Report...")
