@@ -35,7 +35,6 @@ class SalesEstimation:
         today = datetime.today()
         today_str = today.strftime("%Y-%m-%d")
         month_start = datetime(today.year, today.month, 1)
-        month_cutoff = datetime(today.year, today.month, selected_date - 1)
         month_end = pd.Timestamp(month_start) + pd.offsets.MonthEnd(1)
 
         output_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
@@ -50,11 +49,16 @@ class SalesEstimation:
                 df_day_sales['product_sales'] = df_day_sales['product_sales'].astype(float)
                 df_day_sales['weekday'] = df_day_sales['date'].dt.day_name()
 
-                df_march = df_day_sales[
-                    (df_day_sales['date'] >= month_start) &
-                    (df_day_sales['date'] <= month_cutoff)]
+                today = datetime.today()
+                cutoff_date = datetime(today.year, today.month, selected_date)
+                month_start = datetime(today.year, today.month, 1)
 
-                actual_sales_to_date = df_march['product_sales'].sum()
+                # ✅ Actual sales: strictly before the cutoff date (excluding today's partial sales)
+                df_actual = df_day_sales[
+                    (df_day_sales['date'] >= month_start) &
+                    (df_day_sales['date'] < cutoff_date)
+                ]
+                actual_sales_to_date = df_actual['product_sales'].sum()
 
                 def get_dynamic_last_4_day_averages(df_estimation, cutoff_date):
                     df_filtered = df_estimation[df_estimation['date'] < cutoff_date].copy()
@@ -90,8 +94,9 @@ class SalesEstimation:
 
                     return pd.Series(weekday_avgs)
 
-                weekday_avg_sales = get_dynamic_last_4_day_averages(df_day_sales, month_cutoff + timedelta(days=1))
-                remaining_days = pd.date_range(start=month_cutoff + timedelta(days=1), end=month_end)
+                weekday_avg_sales = get_dynamic_last_4_day_averages(df_day_sales, cutoff_date)
+                month_end = pd.Timestamp(f"{today.year}-{today.month}-01") + pd.offsets.MonthEnd(1)
+                remaining_days = pd.date_range(start=cutoff_date, end=month_end)
                 remaining_weekdays = remaining_days.day_name()
 
                 remaining_sales_estimate = pd.Series(remaining_weekdays.map(weekday_avg_sales)).sum()

@@ -1,40 +1,40 @@
 {
-  "2025-03-31": [
+  "2025-04-01": [
     {
       "market": "Enzymedica US",
-      "actual_sales": 1663110.73,
-      "estimated_sales": 50002.27,
-      "total_estimation": 1713113.0
+      "actual_sales": 0.0,
+      "estimated_sales": 2109172.13,
+      "total_estimation": 2109172.13
     },
     {
       "market": "Enzyme Science US",
-      "actual_sales": 81877.15,
-      "estimated_sales": 2634.34,
-      "total_estimation": 84511.49
+      "actual_sales": 0.0,
+      "estimated_sales": 90248.31,
+      "total_estimation": 90248.31
     },
     {
       "market": "Enzymedica EU - Germany",
-      "actual_sales": 25083.62,
-      "estimated_sales": 809.29,
-      "total_estimation": 25892.91
+      "actual_sales": 0.0,
+      "estimated_sales": 27000.49,
+      "total_estimation": 27000.49
     },
     {
       "market": "Enzymedica EU - Italy",
-      "actual_sales": 14677.7,
-      "estimated_sales": 843.66,
-      "total_estimation": 15521.36
+      "actual_sales": 0.0,
+      "estimated_sales": 16588.47,
+      "total_estimation": 16588.47
     },
     {
       "market": "Enzymedica EU - France",
-      "actual_sales": 7412.73,
-      "estimated_sales": 213.5,
-      "total_estimation": 7626.23
+      "actual_sales": 0.0,
+      "estimated_sales": 8030.94,
+      "total_estimation": 8030.94
     },
     {
       "market": "Enzymedica EU - Spain",
-      "actual_sales": 14671.58,
-      "estimated_sales": 656.18,
-      "total_estimation": 15327.76
+      "actual_sales": 0.0,
+      "estimated_sales": 16021.65,
+      "total_estimation": 16021.65
     }
   ]
 }

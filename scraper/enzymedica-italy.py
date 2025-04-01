@@ -6,8 +6,6 @@ import json
 import pyotp
 import random
 import logging
-import pandas as pd
-from dateutil import parser
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from selenium import webdriver
@@ -16,8 +14,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import pandas as pd
 from pandas.errors import ParserError
-
 
 # LOGGING CONFIGURATION
 logging.basicConfig(
@@ -48,11 +46,9 @@ class EuropeBusinessReportDownloads:
     def __init__(self):
         """Initializing the Web Scraper."""
         self.driver = self.setup_driver()
-        self.driver = self.setup_driver()
         self.master_file = r"C:\Users\d.tanubudhi\Documents\ItalyCustomTransaction.csv"
-        self.report_folder = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\europe-sales-reports\italy"
+        self.report_folder = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\europe-sales-reports\Italy"
         self.output_file = r"c:\Users\d.tanubudhi\Documents\ItalySalesReport.csv"
-
 
     def setup_driver(self):
         """Setup Selenium WebDriver with optimized options."""
@@ -61,7 +57,7 @@ class EuropeBusinessReportDownloads:
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["europe_download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("--headless")
-        options.add_argument("--log-level=3") 
+        options.add_argument("--log-level=3")
 
         return webdriver.Chrome(options=options)
     
@@ -304,51 +300,63 @@ class EuropeBusinessReportDownloads:
 
     def data_cleaning_on_master_file(self):
         df = pd.read_csv(self.master_file)
-        df.columns = df.columns.str.replace(' ', '_').str.replace('/', '_')
-
+        df.columns = df.columns.str.strip().str.replace(' ', '_').str.replace('/', '_').str.lower()
         column_rename_map = {
-            "Data_Ora:": "date_time",
-            "Numero pagamento": "settlement_id",
-            "Tipo": "type",
-            "Numero ordine": "order_id",
-            "SKU": "sku",
-            "Descrizione": "description",
-            "Quantità": "quantity",
-            "Marketplace": "marketplace",
-            "Gestione": "fulfillment",
-            "Città di provenienza dell'ordine": "order_city",
-            "Provincia di provenienza dell'ordine": "order_state",
-            "CAP dell'ordine": "order_postal",
-            "modello di riscossione delle imposte": "tax_collection_model",
-            "Vendite": "product_sales",
-            "Altri costi relativi alle transazioni": "other_transaction_fees",
-            "Altro": "other"
+            "data_ora": "date_time",
+            "numero_pagamento": "settlement_id",
+            "tipo": "type",
+            "numero_ordine": "order_id",
+            "sku": "sku",
+            "descrizione": "description",
+            "quantità": "quantity",
+            "marketplace": "marketplace",
+            "gestione": "fulfillment",
+            "città_di_provenienza_dell'ordine": "order_city",
+            "provincia_di_provenienza_dell'ordine": "order_state",
+            "cap_dell'ordine": "order_postal",
+            "modello_di_riscossione_delle_imposte": "tax_collection_model",
+            "vendite": "product_sales",
+            "imposta_sulle_vendite_dei_prodotti": "product_sales_tax",
+            "accrediti_per_le_spedizioni": "shipping_credits",
+            "imposta_accrediti_per_le_spedizioni": "shipping_credits_tax",
+            "accrediti_per_confezioni_regalo": "gift_wrap_credits",
+            "imposta_sui_crediti_confezione_regalo": "gift_wrap_credits_tax",
+            "sconti_promozionali": "promotional_rebates",
+            "imposta_sugli_sconti_promozionali": "promotional_rebates_tax",
+            "trattenuta_iva_del_marketplace": "marketplace_withheld_tax",
+            "commissioni_di_vendita": "selling_fees",
+            "costi_del_servizio_logistica_di_amazon": "fba_fees",
+            "altri_costi_relativi_alle_transazioni": "other_transaction_fees",
+            "altro": "other",
+            "totale": "total"
         }
+        
         df.rename(columns=column_rename_map, inplace=True)
-
         month_map = {
-            'gen': 'Jan', 'feb': 'Feb', 'mar': 'Mar', 'apr': 'Apr',
-            'mag': 'May', 'giu': 'Jun', 'lug': 'Jul', 'ago': 'Aug',
-            'set': 'Sep', 'ott': 'Oct', 'nov': 'Nov', 'dic': 'Dec'
-        }
+                'gen': 'Jan',
+                'feb': 'Feb',
+                'mar': 'Mar',
+                'apr': 'Apr',
+                'mag': 'May',
+                'giu': 'Jun',
+                'lug': 'Jul',
+                'ago': 'Aug',
+                'set': 'Sep',
+                'ott': 'Oct',
+                'nov': 'Nov',
+                'dic': 'Dec'
+            }
 
-        for ita, eng in month_map.items():
-            df["date_time"] = df["date_time"].str.replace(f" {ita} ", f" {eng} ", regex=False)
+        for fr, eng in month_map.items():
+            df["date_time"] = df["date_time"].str.replace(fr"(?<=\d\s){re.escape(fr)}(?=\s)", eng, regex=True)
 
-        df["date_time"] = pd.to_datetime(
-            df["date_time"].str.replace(" UTC", "", regex=False),
-            format="%d %b %Y %H:%M:%S",
-            dayfirst=True
-        )
+        df["date_time"] = pd.to_datetime(df["date_time"], format='mixed', dayfirst=True)
+
+        print(df["date_time"].head())  # Check after parse
+
         df["date"] = df["date_time"].dt.date
         df["time"] = df["date_time"].dt.time
         df["weekday"] = df["date_time"].dt.day_name()
-
-        logger.debug(f"Current columns: {df.columns.tolist()}")
-
-        if "date_time" not in df.columns:
-            logger.warning("'date_time' column not found after renaming.")
-            return
 
         numerical_columns = [
             'product_sales','selling_fees', 'fba_fees', 'other_transaction_fees',
@@ -364,15 +372,15 @@ class EuropeBusinessReportDownloads:
                 df[col] = pd.to_numeric(df[col], errors='coerce')
 
         columns_to_remove = [
-                'imposta sulle vendite dei prodotti',
-                'Accrediti per le spedizioni',
-                'imposta accrediti per le spedizioni',
-                'Accrediti per confezioni regalo',
-                'imposta sui crediti confezione regalo',
-                'Sconti promozionali',
-                'imposta sugli sconti promozionali',
-                'trattenuta IVA del marketplace'
-            ]
+            "imposta_sulle_vendite_dei_prodotti",
+            "accrediti_per_le_spedizioni",
+            "imposta_accrediti_per_le_spedizioni",
+            "accrediti_per_confezioni_regalo",
+            "imposta_sui_crediti_confezione_regalo",
+            "sconti_promozionali",
+            "imposta_sugli_sconti_promozionali",
+            "trattenuta_iva_del_marketplace"
+        ]
             
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 

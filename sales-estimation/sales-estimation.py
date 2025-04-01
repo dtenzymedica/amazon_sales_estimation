@@ -120,29 +120,30 @@ class SalesEstimation:
         df = pd.read_csv(self.output_path)
         df['date'] = pd.to_datetime(df['date'])
 
-        df_day_sales = df[['date', 'time', 'weekday', 'sku', 'ASIN', 'description', 'product_sales']].copy()
+        df_day_sales = df[['date', 'time', 'weekday', 'sku', 'description', 'product_sales']].copy()
         df_day_sales['product_sales'] = df_day_sales['product_sales'].astype(float)
         df_day_sales['weekday'] = df_day_sales['date'].dt.day_name()
-        
+
         today = datetime.today()
-        target_year = today.year
-        target_month = today.month
-        month_start = datetime(target_year, target_month, 1)
-        month_cutoff = datetime(target_year, target_month, selected_date - 1)
+        cutoff_date = datetime(today.year, today.month, selected_date)
+        month_start = datetime(today.year, today.month, 1)
 
-        df_march = df_day_sales[
+        # ✅ Actual sales: strictly before the cutoff date (excluding today's partial sales)
+        df_actual = df_day_sales[
             (df_day_sales['date'] >= month_start) &
-            (df_day_sales['date'] <= month_cutoff)]
+            (df_day_sales['date'] < cutoff_date)
+        ]
+        actual_sales_to_date = df_actual['product_sales'].sum()
 
-        actual_sales_to_date = df_march['product_sales'].sum()
-        logger.info(f"Sales from {month_start.date()} to {month_cutoff.date()}: {actual_sales_to_date:,.2f}")
+        logger.info(f"Actual sales from earliest record to {cutoff_date.date() - timedelta(days=1)}: {actual_sales_to_date:,.2f}")
+        logger.info(f"Note: {cutoff_date.strftime('%B %d')} (today) is excluded from actuals and used in forecast.")
 
+        # ✅ Rolling 4-day cascading averages for each weekday
         def get_dynamic_last_4_day_averages(df_estimation, cutoff_date):
             df_filtered = df_estimation[df_estimation['date'] < cutoff_date].copy()
             df_filtered['date'] = pd.to_datetime(df_filtered['date'])
             df_filtered['weekday'] = df_filtered['date'].dt.day_name()
 
-            # Group by day and sum product_sales
             df_grouped = (
                 df_filtered.groupby(['date', 'weekday'])['product_sales']
                 .sum()
@@ -155,47 +156,38 @@ class SalesEstimation:
 
             for weekday in df_grouped['weekday'].unique():
                 weekday_rows = df_grouped[df_grouped['weekday'] == weekday].reset_index(drop=True)
+                points = []
 
                 if len(weekday_rows) >= 4:
-                    points = []
+                    points.append(weekday_rows.loc[0:3, 'product_sales'].mean())
+                if len(weekday_rows) >= 5:
+                    vals = list(weekday_rows.loc[1:3, 'product_sales']) + [weekday_rows.loc[4, 'product_sales']]
+                    points.append(sum(vals) / 4)
+                if len(weekday_rows) >= 6:
+                    vals = list(weekday_rows.loc[2:3, 'product_sales']) + list(weekday_rows.loc[4:5, 'product_sales'])
+                    points.append(sum(vals) / 4)
+                if len(weekday_rows) >= 7:
+                    vals = [weekday_rows.loc[3, 'product_sales']] + list(weekday_rows.loc[4:6, 'product_sales']) + [weekday_rows.loc[0, 'product_sales']]
+                    points.append(sum(vals) / 4)
 
-                    # Day 1: last 4 rows (index 0 to 3)
-                    day1 = weekday_rows.loc[0:3, 'product_sales'].mean()
-                    points.append(day1)
-
-                    # Day 2: rows 1-3 + 4
-                    if len(weekday_rows) >= 5:
-                        vals = list(weekday_rows.loc[1:3, 'product_sales']) + [weekday_rows.loc[4, 'product_sales']]
-                        day2 = sum(vals) / 4
-                        points.append(day2)
-
-                    # Day 3: rows 2-3 + 4-5
-                    if len(weekday_rows) >= 6:
-                        vals = list(weekday_rows.loc[2:3, 'product_sales']) + list(weekday_rows.loc[4:5, 'product_sales'])
-                        day3 = sum(vals) / 4
-                        points.append(day3)
-
-                    # Day 4: row 3 + rows 4-6 + row 0
-                    if len(weekday_rows) >= 7:
-                        vals = [weekday_rows.loc[3, 'product_sales']] + list(weekday_rows.loc[4:6, 'product_sales']) + [weekday_rows.loc[0, 'product_sales']]
-                        day4 = sum(vals) / 4
-                        points.append(day4)
-
+                if points:
                     avg_total = round(sum(points) / len(points), 2)
                     weekday_avgs[weekday] = avg_total
+                    logger.info(f"{weekday} rolling avg from {len(points)} combinations: {avg_total}")
                 else:
-                    logger.error(f"Not enough records for {weekday} to compute cascading 4-day average.\n")
+                    logger.warning(f"Not enough records for {weekday} to compute cascading 4-day average.")
+                    weekday_avgs[weekday] = 0.0
 
             return pd.Series(weekday_avgs)
 
+        weekday_avg_sales = get_dynamic_last_4_day_averages(df_day_sales, cutoff_date)
 
-        weekday_avg_sales = get_dynamic_last_4_day_averages(df_day_sales, month_cutoff + timedelta(days=1))
-
-        month_end = pd.Timestamp(f"{target_year}-{target_month}-01") + pd.offsets.MonthEnd(1)
-        remaining_days = pd.date_range(start=month_cutoff + timedelta(days=1), end=month_end)
+        # ✅ Forecast from cutoff_date (inclusive) to end of month
+        month_end = pd.Timestamp(f"{today.year}-{today.month}-01") + pd.offsets.MonthEnd(1)
+        remaining_days = pd.date_range(start=cutoff_date, end=month_end)
         remaining_weekdays = remaining_days.day_name()
 
-        remaining_sales_estimate = pd.Series(remaining_weekdays.map(weekday_avg_sales)).sum()
+        remaining_sales_estimate = pd.Series(remaining_weekdays.map(weekday_avg_sales)).fillna(0).sum()
 
         result = {
             "market": "Enzymedica US",
@@ -204,7 +196,8 @@ class SalesEstimation:
             "total_estimation": round(actual_sales_to_date + remaining_sales_estimate, 2)
         }
 
-        today_str = datetime.today().strftime("%Y-%m-%d")
+        # ✅ Save to JSON
+        today_str = today.strftime("%Y-%m-%d")
         output_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
 
         try:
@@ -218,14 +211,12 @@ class SalesEstimation:
                 all_data[today_str] = []
 
             all_data[today_str] = [x for x in all_data[today_str] if x["market"] != result["market"]]
-
             all_data[today_str].append(result)
 
             with open(output_path, 'w') as f:
                 json.dump(all_data, f, indent=2)
 
             logger.info(f"Saved sales estimation for {result['market']} to JSON.")
-
         except Exception as e:
             logger.error(f"Failed to write JSON: {e}")
 
