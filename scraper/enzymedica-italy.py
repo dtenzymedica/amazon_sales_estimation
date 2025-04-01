@@ -32,7 +32,7 @@ load_dotenv()
 
 # CONFIGURATION
 CONFIG = {
-    "europe_download_path": r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\europe-sales-reports\italy',
+    "europe_download_path": r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\europe-sales-reports\Italy',
     "cookies_path": r"C:\Users\d.tanubudhi\amazon_sales_estimation\cookies.json",
     "login_url": 'https://sellercentral.amazon.de/payments/reports-repository/ref=xx_rrepo_dnav_xx',
     "credentials": {
@@ -47,7 +47,7 @@ class EuropeBusinessReportDownloads:
         """Initializing the Web Scraper."""
         self.driver = self.setup_driver()
         self.master_file = r"C:\Users\d.tanubudhi\Documents\ItalyCustomTransaction.csv"
-        self.report_folder = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\europe-sales-reports\Italy"
+        self.report_folder = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\europe-sales-reports\italy"
         self.output_file = r"c:\Users\d.tanubudhi\Documents\ItalySalesReport.csv"
 
     def setup_driver(self):
@@ -156,6 +156,15 @@ class EuropeBusinessReportDownloads:
 
         except:
             logger.info("'Italy' button not found")
+
+        try:
+            logger.info("Clicking on 'Skip button'")
+            skip_button = WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable(
+                (By.XPATH, '//*[@id="react-joyride-step-0"]/div/div/div/div[2]/div/button')))
+            skip_button.click()
+            logger.info("Successfully clicked 'Skip button'.")
+        except:
+            logger.warning("'Skip button' not found")
 
         try:
             logger.info("Clicking on 'Skip button'")
@@ -302,7 +311,7 @@ class EuropeBusinessReportDownloads:
         df = pd.read_csv(self.master_file)
         df.columns = df.columns.str.strip().str.replace(' ', '_').str.replace('/', '_').str.lower()
         column_rename_map = {
-            "data_ora": "date_time",
+            "data_ora:": "date_time",
             "numero_pagamento": "settlement_id",
             "tipo": "type",
             "numero_ordine": "order_id",
@@ -372,15 +381,15 @@ class EuropeBusinessReportDownloads:
                 df[col] = pd.to_numeric(df[col], errors='coerce')
 
         columns_to_remove = [
-            "imposta_sulle_vendite_dei_prodotti",
-            "accrediti_per_le_spedizioni",
-            "imposta_accrediti_per_le_spedizioni",
-            "accrediti_per_confezioni_regalo",
-            "imposta_sui_crediti_confezione_regalo",
-            "sconti_promozionali",
-            "imposta_sugli_sconti_promozionali",
-            "trattenuta_iva_del_marketplace"
-        ]
+                "imposta_sulle_vendite_dei_prodotti",
+                "accrediti_per_le_spedizioni",
+                "imposta_accrediti_per_le_spedizioni",
+                "accrediti_per_confezioni_regalo",
+                "imposta_sui_crediti_confezione_regalo",
+                "sconti_promozionali",
+                "imposta_sugli_sconti_promozionali",
+                "trattenuta_iva_del_marketplace"
+            ]
             
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 

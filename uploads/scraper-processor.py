@@ -23,7 +23,7 @@ SCRIPTS = [
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzyme-science-scraper.py",
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzymedica_germany.py",
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzymedica-france.py",
-    # r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzymedica-italy.py",
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzymedica-italy.py",
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\scraper\enzymedica-spain.py"
 ]
 
