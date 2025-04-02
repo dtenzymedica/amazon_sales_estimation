@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import json
@@ -237,24 +238,54 @@ class BusinessReportDownloads:
 
             except:
                 logger.warning("Report not ready, retrying in 2 seconds...")
+    
+    def check_new_file_downloaded(self, before_files):
+        """Check if a new report file matching expected pattern has been downloaded."""
+        pattern = re.compile(r"\d{4}[A-Za-z]{3}\d{1,2}-\d{4}[A-Za-z]{3}\d{1,2}CustomUnifiedTransaction\.csv")
+        after_files = set(os.listdir(CONFIG["sales_download_path"]))
+        new_files = after_files - before_files
+
+        for file in new_files:
+            if pattern.match(file):
+                logger.info(f"New file detected: {file}")
+                return True
+        logger.warning("No new matching file downloaded.")
+        return False
 
 if __name__ == "__main__":
-    getreports = BusinessReportDownloads()
-    try:
-        getreports.login()
+    success = False
+    attempts = 0
+    max_attempts = 5
 
-        getreports.navigate_to_reports()
+    while not success and attempts < max_attempts:
+        getreports = BusinessReportDownloads()
+        attempts += 1
+        logger.info(f"Attempt #{attempts} to download the report...")
 
-        today = datetime.today()
-        for i in range(1):
-            date = today - timedelta(days=i+1)
+        try:
+            getreports.login()
+            getreports.navigate_to_reports()
+
+            today = datetime.today()
+            date = today - timedelta(days=1)
             formatted_start_date = date.strftime("%m/%d/%Y")
             formatted_end_date = date.strftime("%m/%d/%Y")
+
+            before_files = set(os.listdir(CONFIG["sales_download_path"]))
 
             getreports.set_date_range(formatted_start_date, formatted_end_date)
             getreports.request_report()
             getreports.wait_for_report()
 
-        logger.info("All reports downloaded successfully!")
-    except Exception as e:
-        logger.warning(f"Files didn't downloaded: {e}")
+            success = getreports.check_new_file_downloaded(before_files)
+
+        except Exception as e:
+            logger.warning(f"Attempt failed due to: {e}")
+        finally:
+            getreports.driver.quit()
+
+    if success:
+        logger.info("Report downloaded successfully.")
+    else:
+        logger.error("Failed to download new report after multiple attempts.")
+

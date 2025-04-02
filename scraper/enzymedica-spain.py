@@ -257,15 +257,22 @@ class EuropeBusinessReportDownloads:
         latest_file = max([os.path.join(folder, f) for f in files], key=os.path.getmtime)
 
         # Extract date from filename
-        match = re.search(r"(\d{4}[A-Za-z]{3}\d{2})-.*?CustomTransaction\.csv", os.path.basename(latest_file))
+        match = re.search(
+            r"(\d{4}[A-Za-z]{3}\d{1,2})-\d{4}[A-Za-z]{3}\d{1,2}CustomTransaction\.csv",
+            os.path.basename(latest_file)
+        )
         if not match:
             logger.warning("Filename format doesn't match expected pattern.")
             return
 
         date_str = match.group(1)
-        date_obj = datetime.strptime(date_str, "%Y%b%d")
-        formatted_date = date_obj.strftime("%Y-%m-%d")
+        try:
+            date_obj = datetime.strptime(date_str, "%Y%b%d")
+        except ValueError as e:
+            logger.error(f"Date parsing failed: {e}")
+            return
 
+        formatted_date = date_obj.strftime("%Y-%m-%d")
         new_filename = f"spain_sales_{formatted_date}.csv"
         new_filepath = os.path.join(folder, new_filename)
 
@@ -379,27 +386,62 @@ class EuropeBusinessReportDownloads:
         df.to_csv(self.output_file, index=False)
         logger.info("Cleaned and saved report for sales estimation.")
 
-if __name__ == "__main__":
-    getreports = EuropeBusinessReportDownloads()
-    try:
-        getreports.login()
-        getreports.navigate_to_reports()
+    def check_new_file_downloaded(self, before_files):
+        """Check if a new report file matching expected pattern has been downloaded."""
+        pattern = re.compile(r"\d{4}[A-Za-z]{3}\d{1,2}-\d{4}[A-Za-z]{3}\d{1,2}CustomTransaction\.csv")
+        after_files = set(os.listdir(CONFIG["europe_download_path"]))
+        new_files = after_files - before_files
 
-        today = datetime.today()
-        for i in range(1):
-            date = today - timedelta(days=i+1)
-            formatted_start_date = date.strftime("%m/%d/%Y")
-            formatted_end_date = date.strftime("%m/%d/%Y")
+        for file in new_files:
+            if pattern.match(file):
+                logger.info(f"New file detected: {file}")
+                return True
+        logger.warning("No new matching file downloaded.")
+        return False
+    
+if __name__ == "__main__":
+    success = False
+    attempts = 0
+    max_attempts = 5
+
+    while not success and attempts < max_attempts:
+        getreports = EuropeBusinessReportDownloads()
+        attempts += 1
+        logger.info(f"Attempt #{attempts} to download the Spain report...")
+
+        try:
+            getreports.login()
+            getreports.navigate_to_reports()
+
+            date = datetime.today() - timedelta(days=1)
+            formatted_start_date = formatted_end_date = date.strftime("%m/%d/%Y")
+
+            before_files = set(os.listdir(CONFIG["europe_download_path"]))
 
             getreports.set_date_range(formatted_start_date, formatted_end_date)
             getreports.request_report()
             getreports.wait_for_report()
-            getreports.rename_latest_download()
-            time.sleep(3)
-            getreports.append_latest_report_master_file()
-            time.sleep(2)
-            getreports.data_cleaning_on_master_file()
 
-        logger.info("Spain reports downloaded successfully!")
-    except Exception as e:
-        logger.warning(f"Files didn't downloaded: {e}")
+            success = getreports.check_new_file_downloaded(before_files)
+            if success:
+                getreports.rename_latest_download()
+                time.sleep(2)
+                getreports.append_latest_report_master_file()
+                time.sleep(2)
+                getreports.data_cleaning_on_master_file()
+                logger.info("Spain reports downloaded and processed successfully!")
+            else:
+                logger.warning("No new file found, skipping rename and processing.")
+        except Exception as e:
+            logger.warning(f"Files didn't download: {e}")
+        finally:
+            getreports.driver.quit()
+
+        if not success:
+            time.sleep(3)
+
+    if success:
+        logger.info("Report download completed successfully.")
+    else:
+        logger.error("Failed to download new report after multiple attempts.")
+
