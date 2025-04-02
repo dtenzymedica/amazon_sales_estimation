@@ -34,11 +34,11 @@ class SalesEstimation:
         self.json_path = r'C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sku-asin.json'
 
     def append_latest_report_master_file(self):
-        FILE_PATTERN = re.compile(r"(\d{4}[A-Za-z]{3}\d{2})-(\d{4}[A-Za-z]{3}\d{2})CustomUnifiedTransaction\.csv")
-        matching_files = [
-            f for f in os.listdir(self.report_folder)
-            if FILE_PATTERN.match(f)
-        ]
+        FILE_PATTERN = re.compile(r"(\d{4}[A-Za-z]{3}\d{1,2})-(\d{4}[A-Za-z]{3}\d{1,2})CustomUnifiedTransaction\.csv")
+        all_files = os.listdir(self.report_folder)
+        logger.info(f"Files in folder: {all_files}")  # Optional debug log
+
+        matching_files = [f for f in all_files if FILE_PATTERN.match(f)]
 
         if not matching_files:
             logger.info("No matching report files found.")
@@ -47,6 +47,7 @@ class SalesEstimation:
         matching_files_paths = [os.path.join(self.report_folder, f) for f in matching_files]
         latest_file = max(matching_files_paths, key=os.path.getmtime)
         logger.info(f"Latest downloaded file: {latest_file}")
+
         try:
             master_df = pd.read_csv(self.master_file, low_memory=False)
         except ParserError as e:
@@ -55,11 +56,12 @@ class SalesEstimation:
                 logger.warning("ParserError encountered. Retried reading file with skiprows=7.")
             else:
                 raise e
-        new_df = pd.read_csv(latest_file, skiprows=7)
 
+        new_df = pd.read_csv(latest_file, skiprows=7)
         combined_df = pd.concat([master_df, new_df], ignore_index=True)
         combined_df.to_csv(self.master_file, index=False)
         logger.info("Appended latest report to master successfully.")
+
 
     def read_material_master(self):
         try:
@@ -128,17 +130,17 @@ class SalesEstimation:
         cutoff_date = datetime(today.year, today.month, selected_date)
         month_start = datetime(today.year, today.month, 1)
 
-        # ✅ Actual sales: strictly before the cutoff date (excluding today's partial sales)
+        # Actual sales: strictly before the cutoff date (excluding today's partial sales)
         df_actual = df_day_sales[
             (df_day_sales['date'] >= month_start) &
-            (df_day_sales['date'] < cutoff_date)
+            (df_day_sales['date'] <= cutoff_date)
         ]
         actual_sales_to_date = df_actual['product_sales'].sum()
 
         logger.info(f"Actual sales from earliest record to {cutoff_date.date() - timedelta(days=1)}: {actual_sales_to_date:,.2f}")
         logger.info(f"Note: {cutoff_date.strftime('%B %d')} (today) is excluded from actuals and used in forecast.")
 
-        # ✅ Rolling 4-day cascading averages for each weekday
+        # Rolling 4-day cascading averages for each weekday
         def get_dynamic_last_4_day_averages(df_estimation, cutoff_date):
             df_filtered = df_estimation[df_estimation['date'] < cutoff_date].copy()
             df_filtered['date'] = pd.to_datetime(df_filtered['date'])
@@ -182,7 +184,7 @@ class SalesEstimation:
 
         weekday_avg_sales = get_dynamic_last_4_day_averages(df_day_sales, cutoff_date)
 
-        # ✅ Forecast from cutoff_date (inclusive) to end of month
+        # Forecast from cutoff_date (inclusive) to end of month
         month_end = pd.Timestamp(f"{today.year}-{today.month}-01") + pd.offsets.MonthEnd(1)
         remaining_days = pd.date_range(start=cutoff_date, end=month_end)
         remaining_weekdays = remaining_days.day_name()
@@ -196,7 +198,7 @@ class SalesEstimation:
             "total_estimation": round(actual_sales_to_date + remaining_sales_estimate, 2)
         }
 
-        # ✅ Save to JSON
+        # Save to JSON
         today_str = today.strftime("%Y-%m-%d")
         output_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
 

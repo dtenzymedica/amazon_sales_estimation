@@ -33,11 +33,11 @@ class SalesEstimation:
         self.output_path = r'c:\Users\d.tanubudhi\Documents\enzyme_science_sales_report.csv'
 
     def append_latest_report_master_file(self):
-        FILE_PATTERN = re.compile(r"(\d{4}[A-Za-z]{3}\d{2})-(\d{4}[A-Za-z]{3}\d{2})CustomTransaction\.csv")
-        matching_files = [
-            f for f in os.listdir(self.report_folder)
-            if FILE_PATTERN.match(f)
-        ]
+        FILE_PATTERN = re.compile(r"(\d{4}[A-Za-z]{3}\d{1,2})-(\d{4}[A-Za-z]{3}\d{1,2})CustomTransaction\.csv")
+        all_files = os.listdir(self.report_folder)
+        logger.info(f"Files in folder: {all_files}") 
+
+        matching_files = [f for f in all_files if FILE_PATTERN.match(f)]
 
         if not matching_files:
             logger.info("No matching report files found.")
@@ -55,8 +55,8 @@ class SalesEstimation:
                 logger.warning("ParserError encountered. Retried reading file with skiprows=7.")
             else:
                 raise e
-        new_df = pd.read_csv(latest_file, skiprows=7)
 
+        new_df = pd.read_csv(latest_file, skiprows=7)
         combined_df = pd.concat([master_df, new_df], ignore_index=True)
         combined_df.to_csv(self.master_file, index=False)
         logger.info("Appended latest report to master successfully.")
@@ -114,7 +114,7 @@ class SalesEstimation:
         # ✅ Actual sales: strictly before the cutoff date (excluding today's partial sales)
         df_actual = df_day_sales[
             (df_day_sales['date'] >= month_start) &
-            (df_day_sales['date'] < cutoff_date)
+            (df_day_sales['date'] <= cutoff_date)
         ]
         actual_sales_to_date = df_actual['product_sales'].sum()
 
