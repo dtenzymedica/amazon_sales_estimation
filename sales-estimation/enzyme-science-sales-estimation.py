@@ -30,7 +30,7 @@ class SalesEstimation:
         self.master_file = r'C:\Users\d.tanubudhi\Documents\EnzymeScienceCustomTransaction.csv'
         self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzyme-science-reports'
         self.material_master_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\Enzymedica - Material Master 03172025.xlsx"
-        self.output_path = r'c:\Users\d.tanubudhi\Documents\enzyme_science_sales_report.csv'
+        self.output_path = r'c:\Users\d.tanubudhi\Documents\EnzymeScienceSalesReport.csv'
 
     def append_latest_report_master_file(self):
         FILE_PATTERN = re.compile(r"(\d{4}[A-Za-z]{3}\d{1,2})-(\d{4}[A-Za-z]{3}\d{1,2})CustomTransaction\.csv")
