@@ -126,12 +126,11 @@ def send_sales_summary_email():
         smtp_port = 587
         sender_email = "d.tanubudhi@enzymedica.com"
         sender_password = os.getenv("EMAIL_PASSWORD")
-        # recipients = [
-        #     "b.bechard@enzymedica.com",
-        #     "g.cabrera@enzymedica.com",
-        #     "carolyn@enzymedica.com"
-        # ]
-        recipients = ["d.tanubudhi@enzymedica.com"]
+        recipients = [
+            "b.bechard@enzymedica.com",
+            "g.cabrera@enzymedica.com",
+            "carolyn@enzymedica.com"
+        ]
 
         msg = MIMEMultipart()
         msg["From"] = sender_email
