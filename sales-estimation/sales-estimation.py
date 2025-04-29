@@ -42,7 +42,7 @@ class SalesEstimation:
 
         if not matching_files:
             logger.info("No matching report files found.")
-            return\
+            return
 
         matching_files_paths = [os.path.join(self.report_folder, f) for f in matching_files]
         latest_file = max(matching_files_paths, key=os.path.getmtime)
