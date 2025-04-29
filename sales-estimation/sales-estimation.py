@@ -30,7 +30,7 @@ class SalesEstimation:
         self.master_file = r'C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\EnzymedicaCustomTransaction.csv' 
         self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzymedica-sales-reports'
         self.material_master_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\Enzymedica - Material Master 03172025.xlsx"
-        self.output_path = r'c:\Users\d.tanubudhi\Documents\US-EnzymedicaSalesReport.csv'
+        self.output_path = r'C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\US-EnzymedicaSalesReport.csv'
         self.json_path = r'C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sku-asin.json'
 
     def append_latest_report_master_file(self):
