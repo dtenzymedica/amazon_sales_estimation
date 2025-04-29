@@ -25,10 +25,10 @@ logger = logging.getLogger(__name__)
 class SalesEstimation:
     def __init__(self):
         self.master_files = {
-            "Germany": r'c:\Users\d.tanubudhi\Documents\GermanySalesReport.csv',
-            "Italy": r"c:\Users\d.tanubudhi\Documents\ItalySalesReport.csv",
-            "France": r"c:\Users\d.tanubudhi\Documents\FranceSalesReport.csv",
-            "Spain": r"c:\Users\d.tanubudhi\Documents\SpainSalesReport.csv"
+            "Germany": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\GermanySalesReport.csv",
+            "Italy": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\ItalySalesReport.csv",
+            "France": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\FranceSalesReport.csv",
+            "Spain": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\SpainSalesReport.csv"
         }
 
     def multi_country_sales_estimation(self, selected_date):
@@ -53,7 +53,7 @@ class SalesEstimation:
                 cutoff_date = datetime(today.year, today.month, selected_date)
                 month_start = datetime(today.year, today.month, 1)
 
-                # ✅ Actual sales: strictly before the cutoff date (excluding today's partial sales)
+                # Actual sales: strictly before the cutoff date (excluding today's partial sales)
                 df_actual = df_day_sales[
                     (df_day_sales['date'] >= month_start) &
                     (df_day_sales['date'] < cutoff_date)

@@ -131,6 +131,7 @@ def send_sales_summary_email():
             "g.cabrera@enzymedica.com",
             "carolyn@enzymedica.com"
         ]
+        # recipients = ["d.tanubudhi@enzymedica.com"]
 
         msg = MIMEMultipart()
         msg["From"] = sender_email
