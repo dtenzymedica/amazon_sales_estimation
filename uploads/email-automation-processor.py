@@ -10,7 +10,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(r'C:\Users\d.tanubudhi\amazon_sales_estimation\logs\eamil_automation_pipeline.log', encoding='utf-8'),
+        logging.FileHandler(r'C:\Users\d.tanubudhi\amazon_sales_estimation\logs\email_automation_pipeline.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
