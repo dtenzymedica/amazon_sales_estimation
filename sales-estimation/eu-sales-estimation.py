@@ -115,7 +115,7 @@ class SalesEstimation:
                 logger.warning(f"Error processing {country}: {e}")
 
         try:
-            if os.path.exists(output_path):
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
                 with open(output_path, 'r') as f:
                     all_data = json.load(f)
             else:
@@ -138,6 +138,7 @@ class SalesEstimation:
             logger.info(f"Saved all EU sales estimation results to {output_path}")
         except Exception as e:
             logger.error(f"Failed to write EU results JSON: {e}")
+
 
 if __name__ == "__main__":
     logger.info("Starting EU Sales Estimation Report...")

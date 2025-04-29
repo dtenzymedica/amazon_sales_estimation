@@ -179,12 +179,11 @@ class SalesEstimation:
             "total_estimation": round(actual_sales_to_date + remaining_sales_estimate, 2)
         }
 
-        # ✅ Save to JSON
+        # Save to JSON
         today_str = today.strftime("%Y-%m-%d")
         output_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
-
         try:
-            if os.path.exists(output_path):
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
                 with open(output_path, 'r') as f:
                     all_data = json.load(f)
             else:

@@ -30,7 +30,7 @@ class SalesEstimation:
         self.master_file = r'C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\EnzymedicaCustomTransaction.csv' 
         self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzymedica-sales-reports'
         self.material_master_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\Enzymedica - Material Master 03172025.xlsx"
-        self.output_path = r'C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\US-EnzymedicaSalesReport.csv'
+        self.output_path = r'C:\Users\d.tanubudhi\OneDrive - Enzymedica\DocumentsUS-EnzymedicaSalesReport.csv'
         self.json_path = r'C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sku-asin.json'
 
     def append_latest_report_master_file(self):
@@ -42,7 +42,7 @@ class SalesEstimation:
 
         if not matching_files:
             logger.info("No matching report files found.")
-            return
+            return\
 
         matching_files_paths = [os.path.join(self.report_folder, f) for f in matching_files]
         latest_file = max(matching_files_paths, key=os.path.getmtime)
@@ -201,9 +201,8 @@ class SalesEstimation:
         # Save to JSON
         today_str = today.strftime("%Y-%m-%d")
         output_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
-
         try:
-            if os.path.exists(output_path):
+            if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
                 with open(output_path, 'r') as f:
                     all_data = json.load(f)
             else:
@@ -221,6 +220,7 @@ class SalesEstimation:
             logger.info(f"Saved sales estimation for {result['market']} to JSON.")
         except Exception as e:
             logger.error(f"Failed to write JSON: {e}")
+
 
         return result
 
