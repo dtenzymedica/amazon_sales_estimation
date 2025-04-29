@@ -16,12 +16,12 @@ pipeline {
             }
         }
 
-        stage('Run Main Processor') {
-            steps {
-                echo "Running processor script..."
-                bat "\"%PYTHON_PATH%\" \"%PROCESSOR%\""
-            }
-        }
+        // stage('Run Main Processor') {
+        //     steps {
+        //         echo "Running processor script..."
+        //         bat "\"%PYTHON_PATH%\" \"%PROCESSOR%\""
+        //     }
+        // }
 
         stage('Email Automation.') {
             steps {
