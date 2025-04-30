@@ -129,7 +129,10 @@ def send_sales_summary_email():
         recipients = [
             "b.bechard@enzymedica.com",
             "g.cabrera@enzymedica.com",
-            "carolyn@enzymedica.com"
+            "carolyn@enzymedica.com",
+            "yamil.V@hatchecom.com",
+            "fernando.T@hatchecom.com",
+            "carlos.C@hatchecom.com"
         ]
 
         msg = MIMEMultipart()
