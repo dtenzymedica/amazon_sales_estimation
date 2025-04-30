@@ -137,18 +137,27 @@ class BusinessReportDownloads:
         self.random_delay(2, 4)
 
         try:
-            account_select = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="sc-content-container"]/div/div[1]/div/div[1]/button')))
+            account_select = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, '//span[text()="Enzyme Science"]/ancestor::button')
+                )
+            )
             account_select.click()
             logger.info('Selected Enzyme Science account.')
 
-            us_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="sc-content-container"]/div/div[1]/div/div[1]/div/div[15]/button')))
+            us_button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, '//span[text()="United States"]/ancestor::button')
+                )
+            )
             us_button.click()
             logger.info("Clicked on US button")
 
-            select_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="sc-content-container"]/div/div[2]/div[2]/button')))
+            select_button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, '//button[contains(@class, "full-page-account-switcher-buttons")]')
+                )
+            )
             select_button.click()
             logger.info("Clicked on 'Select Account' button")
         except:

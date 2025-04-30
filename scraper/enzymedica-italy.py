@@ -149,10 +149,13 @@ class EuropeBusinessReportDownloads:
             eu_italy_button.click()
             logger.info("Clicked on Italy button")
 
-            select_button = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="sc-content-container"]/div/div[2]/div[2]/button')))
+            select_button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, '//button[contains(@class, "full-page-account-switcher-buttons")]')
+                )
+            )
             select_button.click()
-            logger.info("Clicked on 'Select Account' button")
+            logger.info("Clicked on 'Select Account - Italy' button")
 
         except:
             logger.info("'Italy' button not found")
