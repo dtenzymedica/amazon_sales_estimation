@@ -1,13 +1,10 @@
 import os
 import sys
 import json
-import smtplib
 import warnings
 import pandas as pd
 import logging
-from datetime import datetime, timedelta
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta, date
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=UserWarning)
@@ -32,10 +29,10 @@ class SalesEstimation:
         }
 
     def multi_country_sales_estimation(self, selected_date):
-        today = datetime.today()
-        cutoff_date = datetime(today.year, today.month, selected_date)
+        today = date.today()
+        cutoff_date = date(today.year, today.month, selected_date)
+        month_start = date(today.year, today.month, 1)
         report_date = cutoff_date - timedelta(days=1)
-        month_start = datetime(today.year, today.month, 1)
         month_end = pd.Timestamp(month_start) + pd.offsets.MonthEnd(1)
 
         output_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
@@ -44,7 +41,7 @@ class SalesEstimation:
         for country, file_path in self.master_files.items():
             try:
                 df = pd.read_csv(file_path)
-                df['date'] = pd.to_datetime(df['date'])
+                df['date'] = pd.to_datetime(df['date']).dt.date
 
                 df_day_sales = df[['date', 'time', 'weekday', 'sku', 'description', 'product_sales']].copy()
                 df_day_sales['product_sales'] = df_day_sales['product_sales'].astype(float)
