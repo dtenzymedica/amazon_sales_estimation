@@ -162,18 +162,26 @@ class SalesEstimation:
 
         weekday_avg_sales = get_dynamic_last_4_day_averages(df_day_sales, cutoff_date)
 
-        # Forecast from cutoff_date (inclusive) to end of month
-        month_end = pd.Timestamp(f"{today.year}-{today.month}-01") + pd.offsets.MonthEnd(1)
-        remaining_days = pd.date_range(start=cutoff_date, end=month_end)
-        remaining_weekdays = remaining_days.day_name()
+        report_month_end = report_date.replace(day=1) + pd.offsets.MonthEnd(0)
+        is_last_day = report_date.date() == report_month_end.date()
 
-        remaining_sales_estimate = pd.Series(remaining_weekdays.map(weekday_avg_sales)).fillna(0).sum()
+        logger.info(f"Report date: {report_date.date()}, Month end: {report_month_end.date()}, Is last day? {is_last_day}")
+
+        if not is_last_day:
+            remaining_days = pd.date_range(start=cutoff_date, end=report_month_end)
+            remaining_weekdays = remaining_days.day_name()
+            remaining_sales_estimate = pd.Series(remaining_weekdays.map(weekday_avg_sales)).fillna(0).sum()
+            total_estimation = actual_sales_to_date + remaining_sales_estimate
+        else:
+            logger.info("Report is for the last day of the month. Using actuals only.")
+            remaining_sales_estimate = 0
+            total_estimation = actual_sales_to_date
 
         result = {
             "market": "Enzyme Science US",
             "actual_sales": round(actual_sales_to_date, 2),
             "estimated_sales": round(remaining_sales_estimate, 2),
-            "total_estimation": round(actual_sales_to_date + remaining_sales_estimate, 2)
+            "total_estimation": round(total_estimation, 2)
         }
 
         # Save to JSON
