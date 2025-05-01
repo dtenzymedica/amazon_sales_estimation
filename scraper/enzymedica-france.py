@@ -46,9 +46,9 @@ class EuropeBusinessReportDownloads:
     def __init__(self):
         """Initializing the Web Scraper."""
         self.driver = self.setup_driver()
-        self.master_file = r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\FranceCustomTransaction.csv"
+        self.master_file = r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\MasterFiles\FranceCustomTransaction.csv"
         self.report_folder = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\europe-sales-reports\france"
-        self.output_file = r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\FranceSalesReport.csv"
+        self.output_file = r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\ReportFiles\FranceSalesReport.csv"
 
     def setup_driver(self):
         """Setup Selenium WebDriver with optimized options."""
