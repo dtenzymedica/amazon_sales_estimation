@@ -40,8 +40,18 @@ class SalesEstimation:
 
         for country, file_path in self.master_files.items():
             try:
-                df = pd.read_csv(file_path)
+                try:
+                    df = pd.read_csv(file_path)
+                except pd.errors.ParserError as e:
+                    logger.warning(f"{country} file failed with skiprows=7. Retrying without skiprows.")
+                    df = pd.read_csv(file_path, skiprows=7)
+                except Exception as e:
+                    logging.error(f"{country} file could not be read at all: {e}")
+                    continue
+                
+                logger.info(df.columns)
                 df['date'] = pd.to_datetime(df['date'])  
+                
 
                 df_day_sales = df[['date', 'time', 'weekday', 'sku', 'description', 'product_sales']].copy()
                 df_day_sales['product_sales'] = df_day_sales['product_sales'].astype(float)

@@ -46,7 +46,7 @@ class EuropeBusinessReportDownloads:
     def __init__(self):
         """Initializing the Web Scraper."""
         self.driver = self.setup_driver()
-        self.master_file = r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\MasterFiles\GermanySalesReport.csv"
+        self.master_file = r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\MasterFiles\GermanyCustomTransaction.csv"
         self.report_folder = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\europe-sales-reports\germany"
         self.output_file = r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\ReportFiles\GermanySalesReport.csv"
 
@@ -56,7 +56,7 @@ class EuropeBusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["europe_download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
         options.add_argument("--log-level=3") 
 
 
