@@ -131,7 +131,7 @@ def send_sales_summary_email():
             <div style="margin-top: 10px; font-size: 14px; background-color: #f9f9f9; border-left: 4px solid #0073e6; padding: 12px;">
             <strong>Column Guide:</strong><br>
             <ul style="margin: 6px 0 0 20px; padding: 0;">
-                <li><strong>Actual Sales:</strong> Finalized sales from the beginning of the month up to the report date.</li>
+                <li><strong>Actual Sales:</strong> Total sales from the beginning of the month up to the report date.</li>
                 <li><strong>Estimated Sales:</strong> Projected sales from the report date through the end of the month, based on weekday trends. Returns 0 if no remaining days are left in the month.</li>
                 <li><strong>Total Estimation:</strong> The combined value of actual and estimated sales for the entire month. If there are no remaining days in the month, this returns the actual sales value only.</li>
             </ul>
