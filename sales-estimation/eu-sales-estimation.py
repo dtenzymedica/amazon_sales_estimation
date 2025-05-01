@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 class SalesEstimation:
     def __init__(self):
         self.master_files = {
-            "Germany": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\MasterFiles\GermanyCustomTransaction.csv",
-            "Italy": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\MasterFiles\ItalyCustomTransaction.csv",
-            "France": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\MasterFiles\FranceCustomTransaction.csv",
-            "Spain": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\MasterFiles\SpainCustomTransaction.csv"
+            "Germany": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\ReportFiles\GermanySalesReport.csv",
+            "Italy": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\ReportFiles\ItalySalesReport.csv",
+            "France": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\ReportFiles\FranceSalesReport.csv",
+            "Spain": r"C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\Sales_Estimations_Reports\ReportFiles\SpainSalesReport.csv"
         }
 
     def multi_country_sales_estimation(self, selected_date):
@@ -49,7 +49,6 @@ class SalesEstimation:
                     logging.error(f"{country} file could not be read at all: {e}")
                     continue
                 
-                logger.info(df.columns)
                 df['date'] = pd.to_datetime(df['date'])  
                 
 
