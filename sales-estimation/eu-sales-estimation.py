@@ -29,10 +29,10 @@ class SalesEstimation:
         }
 
     def multi_country_sales_estimation(self, selected_date):
-        today = date.today()
-        cutoff_date = date(today.year, today.month, selected_date)
-        month_start = date(today.year, today.month, 1)
+        today = datetime.today()
+        cutoff_date = datetime(today.year, today.month, selected_date)
         report_date = cutoff_date - timedelta(days=1)
+        month_start = report_date.replace(day=1)
         month_end = pd.Timestamp(month_start) + pd.offsets.MonthEnd(1)
 
         output_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
@@ -47,14 +47,10 @@ class SalesEstimation:
                 df_day_sales['product_sales'] = df_day_sales['product_sales'].astype(float)
                 df_day_sales['weekday'] = df_day_sales['date'].dt.day_name()
 
-                today = datetime.today()
-                cutoff_date = datetime(today.year, today.month, selected_date)
-                month_start = datetime(today.year, today.month, 1)
-
                 # Actual sales: strictly before the cutoff date (excluding today's partial sales)
                 df_actual = df_day_sales[
                     (df_day_sales['date'] >= month_start) &
-                    (df_day_sales['date'] < cutoff_date)
+                    (df_day_sales['date'] <= report_date)
                 ]
                 actual_sales_to_date = df_actual['product_sales'].sum()
 

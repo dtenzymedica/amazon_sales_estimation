@@ -26,7 +26,7 @@ class SalesEstimation:
         self.master_file = r'C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\EnzymedicaCustomTransaction.csv' 
         self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzymedica-sales-reports'
         self.material_master_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\reports\Enzymedica - Material Master 03172025.xlsx"
-        self.output_path = r'C:\Users\d.tanubudhi\OneDrive - Enzymedica\DocumentsUS-EnzymedicaSalesReport.csv'
+        self.output_path = r'C:\Users\d.tanubudhi\OneDrive - Enzymedica\Documents\US-EnzymedicaSalesReport.csv'
         self.json_path = r'C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sku-asin.json'
 
     def append_latest_report_master_file(self):
@@ -57,7 +57,6 @@ class SalesEstimation:
         combined_df = pd.concat([master_df, new_df], ignore_index=True)
         combined_df.to_csv(self.master_file, index=False)
         logger.info("Appended latest report to master successfully.")
-
 
     def read_material_master(self):
         try:
@@ -122,18 +121,19 @@ class SalesEstimation:
         df_day_sales['product_sales'] = df_day_sales['product_sales'].astype(float)
         df_day_sales['weekday'] = df_day_sales['date'].dt.day_name()
 
-        today = date.today()
-        cutoff_date = date(today.year, today.month, selected_date)
-        month_start = date(today.year, today.month, 1)
+        today = datetime.today()
+        cutoff_date = datetime(today.year, today.month, selected_date)
+        report_date = cutoff_date - timedelta(days=1)
+        month_start = report_date.replace(day=1)
 
         # Actual sales: strictly before the cutoff date (excluding today's partial sales)
         df_actual = df_day_sales[
             (df_day_sales['date'] >= month_start) &
-            (df_day_sales['date'] < cutoff_date)
+            (df_day_sales['date'] <= report_date)
         ]
         actual_sales_to_date = df_actual['product_sales'].sum()
 
-        logger.info(f"Actual sales from earliest record to {cutoff_date.date() - timedelta(days=1)}: {actual_sales_to_date:,.2f}")
+        logger.info(f"Actual sales from earliest record to {report_date}: {actual_sales_to_date:,.2f}")
         logger.info(f"Note: {cutoff_date.strftime('%B %d')} (today) is excluded from actuals and used in forecast.")
 
         # Rolling 4-day cascading averages for each weekday
