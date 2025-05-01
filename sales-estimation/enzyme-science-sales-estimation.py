@@ -111,7 +111,7 @@ class SalesEstimation:
         cutoff_date = datetime(today.year, today.month, selected_date)
         month_start = datetime(today.year, today.month, 1)
 
-        # ✅ Actual sales: strictly before the cutoff date (excluding today's partial sales)
+        # Actual sales: strictly before the cutoff date (excluding today's partial sales)
         df_actual = df_day_sales[
             (df_day_sales['date'] >= month_start) &
             (df_day_sales['date'] <= cutoff_date)
@@ -121,7 +121,7 @@ class SalesEstimation:
         logger.info(f"Actual sales from earliest record to {cutoff_date.date() - timedelta(days=1)}: {actual_sales_to_date:,.2f}")
         logger.info(f"Note: {cutoff_date.strftime('%B %d')} (today) is excluded from actuals and used in forecast.")
 
-        # ✅ Rolling 4-day cascading averages for each weekday
+        # Rolling 4-day cascading averages for each weekday
         def get_dynamic_last_4_day_averages(df_estimation, cutoff_date):
             df_filtered = df_estimation[df_estimation['date'] < cutoff_date].copy()
             df_filtered['date'] = pd.to_datetime(df_filtered['date'])
@@ -165,7 +165,7 @@ class SalesEstimation:
 
         weekday_avg_sales = get_dynamic_last_4_day_averages(df_day_sales, cutoff_date)
 
-        # ✅ Forecast from cutoff_date (inclusive) to end of month
+        # Forecast from cutoff_date (inclusive) to end of month
         month_end = pd.Timestamp(f"{today.year}-{today.month}-01") + pd.offsets.MonthEnd(1)
         remaining_days = pd.date_range(start=cutoff_date, end=month_end)
         remaining_weekdays = remaining_days.day_name()
@@ -180,7 +180,8 @@ class SalesEstimation:
         }
 
         # Save to JSON
-        today_str = today.strftime("%Y-%m-%d")
+        report_date = cutoff_date - timedelta(days=1)
+        report_date_key = report_date.strftime("%Y-%m-%d")
         output_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
         try:
             if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
@@ -189,11 +190,11 @@ class SalesEstimation:
             else:
                 all_data = {}
 
-            if today_str not in all_data:
-                all_data[today_str] = []
+            if report_date_key  not in all_data:
+                all_data[report_date_key] = []
 
-            all_data[today_str] = [x for x in all_data[today_str] if x["market"] != result["market"]]
-            all_data[today_str].append(result)
+            all_data[report_date_key] = [x for x in all_data[report_date_key] if x["market"] != result["market"]]
+            all_data[report_date_key].append(result)
 
             with open(output_path, 'w') as f:
                 json.dump(all_data, f, indent=2)

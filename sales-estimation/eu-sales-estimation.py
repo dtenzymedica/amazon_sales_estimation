@@ -33,7 +33,8 @@ class SalesEstimation:
 
     def multi_country_sales_estimation(self, selected_date):
         today = datetime.today()
-        today_str = today.strftime("%Y-%m-%d")
+        cutoff_date = datetime(today.year, today.month, selected_date)
+        report_date = cutoff_date - timedelta(days=1)
         month_start = datetime(today.year, today.month, 1)
         month_end = pd.Timestamp(month_start) + pd.offsets.MonthEnd(1)
 
@@ -121,24 +122,24 @@ class SalesEstimation:
             else:
                 all_data = {}
 
-            if today_str not in all_data:
-                all_data[today_str] = []
+            report_date_key = report_date.strftime("%Y-%m-%d")
+            if report_date_key not in all_data:
+                all_data[report_date_key] = []
 
-            # Remove old Enzymedica EU entries
-            all_data[today_str] = [
-                x for x in all_data.get(today_str, [])
+            # Remove old Enzymedica EU entries from that date
+            all_data[report_date_key] = [
+                x for x in all_data[report_date_key]
                 if not x["market"].startswith("Enzymedica EU")
             ]
 
-            # Append new EU results
-            all_data[today_str].extend(all_results)
+            # Append new EU results under the correct key
+            all_data[report_date_key].extend(all_results)
 
             with open(output_path, 'w') as f:
                 json.dump(all_data, f, indent=2)
             logger.info(f"Saved all EU sales estimation results to {output_path}")
         except Exception as e:
             logger.error(f"Failed to write EU results JSON: {e}")
-
 
 if __name__ == "__main__":
     logger.info("Starting EU Sales Estimation Report...")

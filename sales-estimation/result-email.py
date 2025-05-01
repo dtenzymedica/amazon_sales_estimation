@@ -2,7 +2,7 @@ import os
 import json
 import smtplib
 import logging
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -18,7 +18,8 @@ logging.basicConfig(
 
 def send_sales_summary_email():
     try:
-        today_str = datetime.today().strftime("%Y-%m-%d")
+        report_date = date.today() - timedelta(days=1)
+        report_date_key = report_date.strftime("%Y-%m-%d")
         json_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
 
         if not os.path.exists(json_path):
@@ -27,15 +28,15 @@ def send_sales_summary_email():
         with open(json_path, 'r') as f:
             sales_data = json.load(f)
 
-        if today_str not in sales_data:
-            raise ValueError(f"No sales data found for {today_str} in JSON.")
+        if report_date_key not in sales_data:
+            raise ValueError(f"No sales data found for {report_date_key} in JSON.")
 
         eu_actual, eu_estimated, eu_total = 0.0, 0.0, 0.0
         grand_actual, grand_estimated, grand_total = 0.0, 0.0, 0.0
         eu_rows = []
         non_eu_rows = []
 
-        for record in sales_data[today_str]:
+        for record in sales_data[report_date_key]:
             market = record['market']
             actual = record['actual_sales']
             estimated = record['estimated_sales']
@@ -97,10 +98,20 @@ def send_sales_summary_email():
             </tr>
         """
 
+        month_start = report_date.replace(day=1)
+
+        report_date_str = report_date.strftime("%B %#d, %Y")
+        month_start_str = month_start.strftime("%B %#d, %Y")
+
+        if month_start_str == report_date_str:
+            date_range_str = f"for {report_date_str}"
+        else:
+            date_range_str = f"from {month_start_str} to {report_date_str}"
+
         html_content = f"""
         <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <h2>Amazon Sales Estimation Report - {today_str}</h2>
+            <h2>Amazon Sales Estimation Report {date_range_str}</h2>
             <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
                 <thead>
                     <tr style="background-color: #f2f2f2;">
@@ -127,18 +138,19 @@ def send_sales_summary_email():
         sender_email = "d.tanubudhi@enzymedica.com"
         sender_password = os.getenv("EMAIL_PASSWORD")
         recipients = [
-            "b.bechard@enzymedica.com",
-            "g.cabrera@enzymedica.com",
-            "carolyn@enzymedica.com",
-            "yamil.V@hatchecom.com",
-            "fernando.T@hatchecom.com",
-            "carlos.C@hatchecom.com"
+            # "b.bechard@enzymedica.com",
+            # "g.cabrera@enzymedica.com",
+            # "carolyn@enzymedica.com",
+            # "yamil.V@hatchecom.com",
+            # "fernando.T@hatchecom.com",
+            # "carlos.C@hatchecom.com"
+            "d.tanubudhi@enzymedica.com"
         ]
 
         msg = MIMEMultipart()
         msg["From"] = sender_email
         msg["To"] = ", ".join(recipients)
-        msg["Subject"] = f"Amazon Sales Estimation Summary – {today_str}"
+        msg["Subject"] = f"Amazon Sales Estimation Summary – {date_range_str}"
         msg.attach(MIMEText(html_content, "html"))
 
         server = smtplib.SMTP(smtp_server, smtp_port)

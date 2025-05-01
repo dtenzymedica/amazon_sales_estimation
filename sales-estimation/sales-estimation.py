@@ -199,7 +199,8 @@ class SalesEstimation:
         }
 
         # Save to JSON
-        today_str = today.strftime("%Y-%m-%d")
+        report_date = cutoff_date - timedelta(days=1)
+        report_date_key = report_date.strftime("%Y-%m-%d")
         output_path = r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales_results.json"
         try:
             if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
@@ -208,11 +209,11 @@ class SalesEstimation:
             else:
                 all_data = {}
 
-            if today_str not in all_data:
-                all_data[today_str] = []
+            if report_date_key  not in all_data:
+                all_data[report_date_key] = []
 
-            all_data[today_str] = [x for x in all_data[today_str] if x["market"] != result["market"]]
-            all_data[today_str].append(result)
+            all_data[report_date_key] = [x for x in all_data[report_date_key] if x["market"] != result["market"]]
+            all_data[report_date_key].append(result)
 
             with open(output_path, 'w') as f:
                 json.dump(all_data, f, indent=2)
@@ -220,7 +221,6 @@ class SalesEstimation:
             logger.info(f"Saved sales estimation for {result['market']} to JSON.")
         except Exception as e:
             logger.error(f"Failed to write JSON: {e}")
-
 
         return result
 
