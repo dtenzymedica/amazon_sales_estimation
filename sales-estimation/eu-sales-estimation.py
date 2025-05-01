@@ -41,7 +41,7 @@ class SalesEstimation:
         for country, file_path in self.master_files.items():
             try:
                 df = pd.read_csv(file_path)
-                df['date'] = pd.to_datetime(df['date']).dt.date
+                df['date'] = pd.to_datetime(df['date'])  
 
                 df_day_sales = df[['date', 'time', 'weekday', 'sku', 'description', 'product_sales']].copy()
                 df_day_sales['product_sales'] = df_day_sales['product_sales'].astype(float)
