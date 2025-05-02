@@ -263,8 +263,7 @@ class BusinessReportDownloads:
 if __name__ == "__main__":
     success = False
     attempts = 0
-    max_attempts = 5
-
+    max_attempts = 3
     while not success and attempts < max_attempts:
         getreports = BusinessReportDownloads()
         attempts += 1
@@ -275,9 +274,13 @@ if __name__ == "__main__":
             getreports.navigate_to_reports()
 
             today = datetime.today()
-            date = today - timedelta(days=1)
-            formatted_start_date = date.strftime("%m/%d/%Y")
-            formatted_end_date = date.strftime("%m/%d/%Y")
+            start_date = today - timedelta(days=2)
+            end_date = today - timedelta(days=1)  
+
+            formatted_start_date = start_date.strftime("%m/%d/%Y")
+            formatted_end_date = end_date.strftime("%m/%d/%Y")
+
+            logger.info(f"Using date range: {formatted_start_date} to {formatted_end_date}")
 
             before_files = set(os.listdir(CONFIG["enzyme_science_download_path"]))
 
@@ -286,7 +289,6 @@ if __name__ == "__main__":
             getreports.wait_for_report()
 
             success = getreports.check_new_file_downloaded(before_files)
-
         except Exception as e:
             logger.warning(f"Attempt failed due to: {e}")
         finally:
