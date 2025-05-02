@@ -51,7 +51,7 @@ class BusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["enzyme_science_download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
 
         return webdriver.Chrome(options=options)
     
@@ -231,7 +231,6 @@ class BusinessReportDownloads:
                 refresh_button.click()
                 logger.info("Clicked 'Refresh' button...")
                 time.sleep(2)
-                
                 
                 # Check if Download Button Exists
                 download_button = WebDriverWait(self.driver, 15).until(
