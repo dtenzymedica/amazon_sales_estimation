@@ -31,7 +31,7 @@ class SalesEstimation:
     def append_latest_report_master_file(self):
         FILE_PATTERN = re.compile(r"(\d{4}[A-Za-z]{3}\d{1,2})-(\d{4}[A-Za-z]{3}\d{1,2})CustomTransaction\.csv")
         all_files = os.listdir(self.report_folder)
-        logger.info(f"Files in folder: {all_files}") 
+        logger.info(f"Files in folder: {all_files}")  # Optional debug log
 
         matching_files = [f for f in all_files if FILE_PATTERN.match(f)]
 
@@ -41,26 +41,6 @@ class SalesEstimation:
 
         matching_files_paths = [os.path.join(self.report_folder, f) for f in matching_files]
         latest_file = max(matching_files_paths, key=os.path.getmtime)
-        try: 
-            latest_file_df = pd.read_csv(latest_file, skiprows=7, low_memory=False)
-            latest_file_df.columns = latest_file_df.columns.str.replace(' ', '_').str.replace('/', '_')
-            logger.info(latest_file_df.columns)
-            latest_file_df["date_time"] = pd.to_datetime(latest_file_df["date_time"].str.replace(" PST", "", regex=False))
-            latest_file_df["date"] = latest_file_df["date_time"].dt.date  
-
-            latest_date = latest_file_df["date"].max()
-
-            latest_file_df = latest_file_df[latest_file_df["date"] == latest_date]
-            logger.info(f"Filtering data only for latest date in report: {latest_date}")
-
-            latest_file_df["time"] = latest_file_df["date_time"].dt.time
-            latest_file_df["weekday"] = latest_file_df["date_time"].dt.day_name()
-
-        except ParserError as e:
-            if "Expected 1 fields in line 8" in str(e):
-                latest_file_df = pd.read_csv(latest_file, low_memory=False)
-                logger.warning("ParserError encountered. Retried reading file with skiprows=7 for latest file.")
-                logger.info(latest_file_df.head(5))
         logger.info(f"Latest downloaded file: {latest_file}")
 
         try:
@@ -72,16 +52,19 @@ class SalesEstimation:
             else:
                 raise e
 
-        combined_df = pd.concat([master_df, latest_file_df], ignore_index=True)
+        new_df = pd.read_csv(latest_file, skiprows=7)
+        combined_df = pd.concat([master_df, new_df], ignore_index=True)
         combined_df.to_csv(self.master_file, index=False)
         logger.info("Appended latest report to master successfully.")
 
     def data_cleaning_on_master_file(self):
         df = pd.read_csv(self.master_file)
         df.columns = df.columns.str.replace(' ', '_').str.replace('/', '_')
-        df["date_time"] = pd.to_datetime(df["date_time"].str.replace(" PST", "", regex=False))
+        df = df.loc[:, ~df.columns.duplicated()]  # remove dupes
+        df["date_time"] = pd.to_datetime(df["date_time"].astype(str).str.replace(" PST", "", regex=False))
+
         df["date"] = df["date_time"].dt.date
-        df["time"] = df["date_time"].dt.time    
+        df["time"] = df["date_time"].dt.time
         df["weekday"] = df["date_time"].dt.day_name()
 
         numerical_columns = [
@@ -104,7 +87,7 @@ class SalesEstimation:
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 
         rearrange_columns = [
-            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'description','quantity','marketplace',
+            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'ASIN', 'description','quantity','marketplace',
             'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
             'other_transaction_fees','other','product_sales']
 
@@ -127,7 +110,6 @@ class SalesEstimation:
         report_date = cutoff_date - timedelta(days=1)
         month_start = report_date.replace(day=1)
 
-        # Actual sales: strictly before the cutoff date (excluding today's partial sales)
         df_actual = df_day_sales[
             (df_day_sales['date'] >= month_start) &
             (df_day_sales['date'] <= report_date)

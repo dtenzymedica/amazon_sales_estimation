@@ -51,7 +51,7 @@ class BusinessReportDownloads:
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", {"download.default_directory": CONFIG["enzyme_science_download_path"]})
         options.add_argument("--disable-blink-features=AutomationControlled")
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
 
         return webdriver.Chrome(options=options)
     
@@ -259,11 +259,11 @@ class BusinessReportDownloads:
                 return True
         logger.warning("No new matching file downloaded.")
         return False
-
 if __name__ == "__main__":
     success = False
     attempts = 0
-    max_attempts = 3
+    max_attempts = 5
+
     while not success and attempts < max_attempts:
         getreports = BusinessReportDownloads()
         attempts += 1
@@ -274,13 +274,9 @@ if __name__ == "__main__":
             getreports.navigate_to_reports()
 
             today = datetime.today()
-            start_date = today - timedelta(days=2)
-            end_date = today - timedelta(days=1)  
-
-            formatted_start_date = start_date.strftime("%m/%d/%Y")
-            formatted_end_date = end_date.strftime("%m/%d/%Y")
-
-            logger.info(f"Using date range: {formatted_start_date} to {formatted_end_date}")
+            date = today - timedelta(days=1)
+            formatted_start_date = date.strftime("%m/%d/%Y")
+            formatted_end_date = date.strftime("%m/%d/%Y")
 
             before_files = set(os.listdir(CONFIG["enzyme_science_download_path"]))
 
@@ -289,6 +285,7 @@ if __name__ == "__main__":
             getreports.wait_for_report()
 
             success = getreports.check_new_file_downloaded(before_files)
+
         except Exception as e:
             logger.warning(f"Attempt failed due to: {e}")
         finally:
@@ -298,3 +295,4 @@ if __name__ == "__main__":
         logger.info("Report downloaded successfully.")
     else:
         logger.error("Failed to download new report after multiple attempts.")
+
