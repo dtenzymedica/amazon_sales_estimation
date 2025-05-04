@@ -146,10 +146,10 @@ def send_sales_summary_email():
         sender_email = "d.tanubudhi@enzymedica.com"
         sender_password = os.getenv("EMAIL_PASSWORD")
         recipients = [
-            # "b.bechard@enzymedica.com", "g.cabrera@enzymedica.com",
-            # "carolyn@enzymedica.com", "yamil.V@hatchecom.com",
-            # "fernando.T@hatchecom.com", "carlos.C@hatchecom.com"
-            "d.tanubudhi@enzymedica.com"
+            "b.bechard@enzymedica.com", "g.cabrera@enzymedica.com",
+            "carolyn@enzymedica.com", "yamil.V@hatchecom.com",
+            "fernando.T@hatchecom.com", "carlos.C@hatchecom.com"
+            # "d.tanubudhi@enzymedica.com"
         ]
 
         msg = MIMEMultipart()
