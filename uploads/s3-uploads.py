@@ -91,7 +91,7 @@ class S3Uploader:
 
     def get_latest_file(self):
         """Find the latest file in the directory based on the naming pattern."""
-        FILE_PATTERN = re.compile(r"transaction_data_(\d{4}-\d{2}-\d{2})\.csv")
+        FILE_PATTERN = re.compile(r"enzymedica_transaction_data_(\d{4}-\d{2}-\d{2})\.csv")
 
         local_path = Path(self.local_files_dir)
         if not local_path.exists() or not local_path.is_dir():
@@ -131,7 +131,7 @@ class S3Uploader:
 
         # Extract year and month from the file name
         file_name = latest_file.name
-        match = re.search(r"transaction_data_(\d{4})-(\d{2})-(\d{2})\.csv", file_name)
+        match = re.search(r"enzymedica_transaction_data_(\d{4})-(\d{2})-(\d{2})\.csv", file_name)
 
         if not match:
             logger.error(f"Invalid filename format: {file_name}")

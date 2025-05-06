@@ -21,12 +21,12 @@ logger = logging.getLogger(__name__)
 
 class DataProcessing:
     def __init__(self):
-        self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzyme-science-reports'
+        self.report_folder = r'C:\Users\d.tanubudhi\amazon_sales_estimation\reports\enzymedica-sales-reports'
         self.json_path = r'C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sku-asin.json'
 
     def get_the_latest_report(self):
         """Getting the latest report file from reports folder using regex."""
-        FILE_PATTERN = re.compile(r"(\d{4}[A-Za-z]{3}\d{2})-(\d{4}[A-Za-z]{3}\d{2})CustomUnifiedTransaction\.csv")
+        FILE_PATTERN = re.compile(r"(\d{4}[A-Za-z]{3}\d{1,2})-(\d{4}[A-Za-z]{3}\d{1,2})CustomUnifiedTransaction\.csv")
         files = os.listdir(self.report_folder)
 
         valid_files = []
@@ -73,7 +73,11 @@ class DataProcessing:
         logger.info(f"Reading file: {latest_file}")
         df = pd.read_csv(latest_file, skiprows=7)
         df.columns = df.columns.str.replace(' ', '_').str.replace('/', '_')
-
+        df["date_time"] = pd.to_datetime(df["date_time"].str.replace(" PST", "", regex=False))
+        df["date"] = df["date_time"].dt.date
+        df["time"] = df["date_time"].dt.time
+        df["weekday"] = df["date_time"].dt.day_name()
+        
         df['data_time'] = pd.to_datetime(df['date_time'], errors='coerce')
 
         numerical_columns = [
@@ -106,8 +110,10 @@ class DataProcessing:
 
         rearrange_columns = [
             'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'ASIN', 'description','quantity','marketplace',
-            'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
-            'other_transaction_fees','other','product_sales']
+            'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model','other_transaction_fees', 
+            'product_sales_tax', 'shipping_credits', 'shipping_credits_tax', 'gift_wrap_credits', 'giftwrap_credits_tax', 
+            'Regulatory_Fee', 'Tax_On_Regulatory_Fee', 'promotional_rebates',
+            'promotional_rebates_tax', 'marketplace_withheld_tax', 'other','product_sales', 'total']
 
         existing_columns = [col for col in rearrange_columns if col in df.columns]
         df = df[existing_columns]
