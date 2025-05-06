@@ -122,7 +122,7 @@ class DataProcessing:
 
         output_folder = os.path.join(os.getcwd(), "outputfiles")
         os.makedirs(output_folder, exist_ok=True)
-        output_file_path = os.path.join(output_folder, f"transaction_data_{formatted_date}.csv")
+        output_file_path = os.path.join(output_folder, f"enzymedica_transaction_data_{formatted_date}.csv")
 
         df.to_csv(output_file_path, index=False)
         logger.info(f"Cleaned data saved to: {output_file_path}")
