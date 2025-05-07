@@ -70,13 +70,6 @@ class S3Uploader:
             logger.error(f"Failed to create S3 client: {e}")
             raise
 
-    def get_target_directory(self):
-        """Generate S3 path structure: sales_estimation_reports/YYYY/MM/"""
-        reports_date = datetime.strptime(self.reports_generation_date, "%Y-%m-%d")
-        year = reports_date.strftime("%Y")
-        month = reports_date.strftime("%m")
-        return f"{year}/{month}"
-
     def check_and_create_folder(self, s3_prefix):
         """Check if the S3 folder exists and create it if not present."""
         response = self.s3_client.list_objects_v2(
@@ -89,71 +82,33 @@ class S3Uploader:
         else:
             logger.info(f"Folder already exists: {s3_prefix}")
 
-    def get_latest_file(self):
-        """Find the latest file in the directory based on the naming pattern."""
-        FILE_PATTERN = re.compile(r"enzymedica_transaction_data_(\d{4}-\d{2}-\d{2})\.csv")
-
+    def upload_all_reports_to_s3(self):
+        """Upload all files in the directory to S3 under base_s3_path root (flat structure)."""
         local_path = Path(self.local_files_dir)
         if not local_path.exists() or not local_path.is_dir():
             logger.error(f"Local directory does not exist: {self.local_files_dir}")
-            return None
-
-        valid_files = []
-        for file_path in local_path.iterdir():
-            if file_path.is_file():
-                match = FILE_PATTERN.search(file_path.name)
-                if match:
-                    try:
-                        date_obj = datetime.strptime(match.group(1), "%Y-%m-%d")
-                        valid_files.append((date_obj, file_path))
-                    except ValueError:
-                        logger.warning(f"Skipping file with invalid date format: {file_path.name}")
-
-        if not valid_files:
-            logger.error("No valid transaction data files found.")
-            return None
-
-        latest_file = max(valid_files, key=lambda x: x[0])[1]
-        logger.info(f"Latest file found: {latest_file}")
-        return latest_file
-
-    def upload_latest_file_to_s3(self):
-        """Upload the latest file to S3 in year/month structure."""
-        latest_file = self.get_latest_file()
-
-        if not latest_file:
-            logger.error("No valid file found for upload.")
             return False
 
-        target_dir = self.get_target_directory()
-        s3_prefix = f"{self.base_s3_path}/{target_dir}/"
-        self.check_and_create_folder(s3_prefix)
-
-        # Extract year and month from the file name
-        file_name = latest_file.name
-        match = re.search(r"enzymedica_transaction_data_(\d{4})-(\d{2})-(\d{2})\.csv", file_name)
-
-        if not match:
-            logger.error(f"Invalid filename format: {file_name}")
+        s3_prefix = f"{self.base_s3_path}/"
+        report_files = [f for f in local_path.iterdir() if f.is_file()]
+        
+        if not report_files:
+            logger.warning(f"No files found in directory: {local_path}")
             return False
 
-        s3_key = f"{s3_prefix}{file_name}"
+        all_success = True
 
-        try:
-            logger.info(f"Uploading {latest_file} to s3://{self.bucket_name}/{s3_key}")
+        for file in report_files:
+            s3_key = f"{s3_prefix}{file.name}"
+            try:
+                logger.info(f"Uploading {file} to s3://{self.bucket_name}/{s3_key}")
+                self.s3_client.upload_file(str(file), self.bucket_name, s3_key)
+                logger.info(f"Successfully uploaded: {file.name}")
+            except Exception as e:
+                logger.error(f"Failed to upload {file.name}: {e}")
+                all_success = False
 
-            self.s3_client.upload_file(
-                str(latest_file),
-                self.bucket_name,
-                s3_key,
-            )
-
-            logger.info(f"Successfully uploaded {latest_file} to s3://{self.bucket_name}/{s3_key}")
-            return True
-
-        except Exception as e:
-            logger.error(f"Error uploading file to S3: {e}")
-            return False
+        return all_success
 
     def close_s3_client(self):
         """Close the S3 client session."""
@@ -162,11 +117,11 @@ class S3Uploader:
 if __name__ == "__main__":
     try:
         uploader = S3Uploader()
-        success = uploader.upload_latest_file_to_s3()
+        success = uploader.upload_all_reports_to_s3()
         uploader.close_s3_client()
 
         if success:
-            logger.info("File upload process completed successfully.")
+            logger.info("File upload process completed successfully in S3.")
         else:
             logger.error("File upload process failed.")
 
