@@ -319,9 +319,9 @@ class EuropeBusinessReportDownloads:
 
     def data_cleaning_on_master_file(self):
         df = pd.read_csv(self.master_file)
-        df.columns = df.columns.str.strip().str.replace(' ', '_').str.replace('/', '_').str.lower()
+        df.columns = df.columns.str.replace(' ', '_').str.replace('/', '_').str.replace(":", "").str.lower()
         column_rename_map = {
-            "data_ora:": "date_time",
+            "data_ora": "date_time",
             "numero_pagamento": "settlement_id",
             "tipo": "type",
             "numero_ordine": "order_id",
@@ -339,7 +339,7 @@ class EuropeBusinessReportDownloads:
             "accrediti_per_le_spedizioni": "shipping_credits",
             "imposta_accrediti_per_le_spedizioni": "shipping_credits_tax",
             "accrediti_per_confezioni_regalo": "gift_wrap_credits",
-            "imposta_sui_crediti_confezione_regalo": "gift_wrap_credits_tax",
+            "imposta_sui_crediti_confezione_regalo": "giftwrap_credits_tax",
             "sconti_promozionali": "promotional_rebates",
             "imposta_sugli_sconti_promozionali": "promotional_rebates_tax",
             "trattenuta_iva_del_marketplace": "marketplace_withheld_tax",
@@ -352,18 +352,9 @@ class EuropeBusinessReportDownloads:
         
         df.rename(columns=column_rename_map, inplace=True)
         month_map = {
-                'gen': 'Jan',
-                'feb': 'Feb',
-                'mar': 'Mar',
-                'apr': 'Apr',
-                'mag': 'May',
-                'giu': 'Jun',
-                'lug': 'Jul',
-                'ago': 'Aug',
-                'set': 'Sep',
-                'ott': 'Oct',
-                'nov': 'Nov',
-                'dic': 'Dec'
+                'gen': 'Jan', 'feb': 'Feb', 'mar': 'Mar', 'apr': 'Apr',
+                'mag': 'May', 'giu': 'Jun', 'lug': 'Jul', 'ago': 'Aug',
+                'set': 'Sep', 'ott': 'Oct', 'nov': 'Nov', 'dic': 'Dec'
             }
 
         for fr, eng in month_map.items():
@@ -371,15 +362,16 @@ class EuropeBusinessReportDownloads:
 
         df["date_time"] = pd.to_datetime(df["date_time"], format='mixed', dayfirst=True)
 
-        print(df["date_time"].head())  # Check after parse
-
         df["date"] = df["date_time"].dt.date
         df["time"] = df["date_time"].dt.time
         df["weekday"] = df["date_time"].dt.day_name()
 
         numerical_columns = [
-            'product_sales','selling_fees', 'fba_fees', 'other_transaction_fees',
-            'other', 'total']
+            'quantity', 'product_sales', 'product_sales_tax', 'shipping_credits',
+            'shipping_credits_tax', 'gift_wrap_credits', 'giftwrap_credits_tax',
+            'promotional_rebates', 'promotional_rebates_tax', 'marketplace_withheld_tax', 
+            'selling_fees', 'fba_fees', 'other_transaction_fees', 'other', 'total'
+            ]
 
         for col in numerical_columns:
             if col in df.columns:
@@ -390,23 +382,19 @@ class EuropeBusinessReportDownloads:
                 )
                 df[col] = pd.to_numeric(df[col], errors='coerce')
 
-        columns_to_remove = [
-                "imposta_sulle_vendite_dei_prodotti",
-                "accrediti_per_le_spedizioni",
-                "imposta_accrediti_per_le_spedizioni",
-                "accrediti_per_confezioni_regalo",
-                "imposta_sui_crediti_confezione_regalo",
-                "sconti_promozionali",
-                "imposta_sugli_sconti_promozionali",
-                "trattenuta_iva_del_marketplace"
-            ]
+        columns_to_remove = ['date_time']
             
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 
         rearrange_columns = [
-            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'description','quantity','marketplace',
-            'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
-            'other_transaction_fees','other','product_sales']
+            'date', 'time', 'weekday', 'settlement_id', 'type', 'order_id', 'sku', 
+            'description', 'quantity', 'marketplace', 'fulfillment', 'order_city', 
+            'order_state', 'order_postal', 'tax_collection_model', 'product_sales', 
+            'product_sales_tax', 'shipping_credits', 'shipping_credits_tax',
+            'gift_wrap_credits', 'giftwrap_credits_tax', 'promotional_rebates', 
+            'promotional_rebates_tax', 'marketplace_withheld_tax', 'selling_fees',
+            'fba_fees', 'other_transaction_fees', 'other', 'total'
+        ]
 
         existing_columns = [col for col in rearrange_columns if col in df.columns]
         df = df[existing_columns]

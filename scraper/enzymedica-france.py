@@ -312,24 +312,35 @@ class EuropeBusinessReportDownloads:
         df = pd.read_csv(self.master_file)
         df.columns = df.columns.str.replace(' ', '_').str.replace('/', '_')
         column_rename_map = {
-                "date_heure": "date_time",
-                "numéro_de_versement": "settlement_id",
-                "type": "type",
-                "numéro_de_la_commande": "order_id",
-                "sku": "sku",
-                "description": "description",
-                "quantité": "quantity",
-                "Marketplace": "marketplace",
-                "traitement": "fulfillment",
-                "ville_d'où_provient_la_commande": "order_city",
-                "Région_d'où_provient_la_commande": "order_state",
-                "code_postal_de_la_commande": "order_postal",
-                "Modèle_de_perception_des_taxes": "tax_collection_model",
-                "ventes_de_produits": "product_sales",
-                "autres_frais_de_transaction": "other_transaction_fees",
-                "autre": "other"
-            }
-        
+            "date_heure": "date_time",
+            "numéro_de_versement": "settlement_id",
+            "type": "type",
+            "numéro_de_la_commande": "order_id",
+            "sku": "sku",
+            "description": "description",
+            "quantité": "quantity",
+            "Marketplace": "marketplace",
+            "traitement": "fulfillment",
+            "ville_d'où_provient_la_commande": "order_city",
+            "Région_d'où_provient_la_commande": "order_state",
+            "code_postal_de_la_commande": "order_postal",
+            "Modèle_de_perception_des_taxes": "tax_collection_model",
+            "ventes_de_produits": "product_sales",
+            "Taxes_sur_la_vente_des_produits": "product_sales_tax",
+            "crédits_d'expédition": "shipping_credits",
+            "taxe_sur_les_crédits_d’expédition": "shipping_credits_tax",
+            "crédits_sur_l'emballage_cadeau": "gift_wrap_credits",
+            "Taxes_sur_les_crédits_cadeaux": "giftwrap_credits_tax",
+            "Rabais_promotionnels": "promotional_rebates",
+            "Taxes_sur_les_remises_promotionnelles": "promotional_rebates_tax",
+            "Taxes_retenues_sur_le_site_de_vente": "marketplace_withheld_tax",
+            "frais_de_vente": "selling_fees",
+            "Frais_Expédié_par_Amazon": "fba_fees",
+            "autres_frais_de_transaction": "other_transaction_fees",
+            "autre": "other",
+            "total": "total"
+        }
+
         df.rename(columns=column_rename_map, inplace=True)
         month_map = {
             'janv.': 'Jan', 'févr.': 'Feb', 'mars': 'Mar', 'avr.': 'Apr',
@@ -342,15 +353,16 @@ class EuropeBusinessReportDownloads:
 
         df["date_time"] = pd.to_datetime(df["date_time"], format='mixed', dayfirst=True)
 
-        print(df["date_time"].head())  # Check after parse
-
         df["date"] = df["date_time"].dt.date
         df["time"] = df["date_time"].dt.time
         df["weekday"] = df["date_time"].dt.day_name()
 
         numerical_columns = [
-            'product_sales','selling_fees', 'fba_fees', 'other_transaction_fees',
-            'other', 'total']
+            'quantity', 'product_sales', 'product_sales_tax', 'shipping_credits',
+            'shipping_credits_tax', 'gift_wrap_credits', 'giftwrap_credits_tax',
+            'promotional_rebates', 'promotional_rebates_tax', 'marketplace_withheld_tax', 
+            'selling_fees', 'fba_fees', 'other_transaction_fees', 'other', 'total'
+            ]
 
         for col in numerical_columns:
             if col in df.columns:
@@ -361,23 +373,19 @@ class EuropeBusinessReportDownloads:
                 )
                 df[col] = pd.to_numeric(df[col], errors='coerce')
 
-        columns_to_remove = [
-                "Taxes sur la vente des produits",
-                "crédits d'expédition",
-                "taxe sur les crédits d’expédition",
-                "crédits sur l'emballage cadeau",
-                "Taxes sur les crédits cadeaux",
-                "Rabais promotionnels",
-                "Taxes sur les remises promotionnelles",
-                "Taxes retenues sur le site de vente"
-            ]
+        columns_to_remove = ['date_time']
             
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 
         rearrange_columns = [
-            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'description','quantity','marketplace',
-            'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
-            'other_transaction_fees','other','product_sales']
+            'date', 'time', 'weekday', 'settlement_id', 'type', 'order_id', 'sku', 
+            'description', 'quantity', 'marketplace', 'fulfillment', 'order_city', 
+            'order_state', 'order_postal', 'tax_collection_model', 'product_sales', 
+            'product_sales_tax', 'shipping_credits', 'shipping_credits_tax',
+            'gift_wrap_credits', 'giftwrap_credits_tax', 'promotional_rebates', 
+            'promotional_rebates_tax', 'marketplace_withheld_tax', 'selling_fees',
+            'fba_fees', 'other_transaction_fees', 'other', 'total'
+            ]
 
         existing_columns = [col for col in rearrange_columns if col in df.columns]
         df = df[existing_columns]

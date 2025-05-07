@@ -322,16 +322,24 @@ class EuropeBusinessReportDownloads:
             'Menge': 'quantity',
             'Marketplace': 'marketplace',
             'Versand': 'fulfillment',
-            'Ort der Bestellung': 'order_city',
+            'Ort_der_Bestellung': 'order_city',
             'Bundesland': 'order_state',
             'Postleitzahl': 'order_postal',
             'Steuererhebungsmodell': 'tax_collection_model',
             'Umsätze': 'product_sales',
+            'Produktumsatzsteuer': 'product_sales_tax',
+            'Gutschrift_für_Versandkosten': 'shipping_credits',
+            'Steuer_auf_Versandgutschrift': 'shipping_credits_tax',
+            'Gutschrift_für_Geschenkverpackung': 'gift_wrap_credits',
+            'Steuer_auf_Geschenkverpackungsgutschriften': 'giftwrap_credits_tax',
+            'Rabatte_aus_Werbeaktionen': 'promotional_rebates',
+            'Steuer_auf_Aktionsrabatte': 'promotional_rebates_tax',
+            'Einbehaltene_Steuer_auf_Marketplace': 'marketplace_withheld_tax',
             'Verkaufsgebühren': 'selling_fees',
-            'Gebühren zu Versand durch Amazon': 'fba_fees',
-            'Andere Transaktionsgebühren': 'other_transaction_fees',
+            'Gebühren_zu_Versand_durch_Amazon': 'fba_fees',
+            'Andere_Transaktionsgebühren': 'other_transaction_fees',
             'Andere': 'other',
-            'Gesamt': 'total',
+            'Gesamt': 'total'
         }
         df.rename(columns=column_rename_map, inplace=True)
 
@@ -344,8 +352,11 @@ class EuropeBusinessReportDownloads:
         df["weekday"] = df["date_time"].dt.day_name()
 
         numerical_columns = [
-            'product_sales','selling_fees', 'fba_fees', 'other_transaction_fees',
-            'other', 'total']
+            'quantity', 'product_sales', 'product_sales_tax', 'shipping_credits',
+            'shipping_credits_tax', 'gift_wrap_credits', 'giftwrap_credits_tax',
+            'promotional_rebates', 'promotional_rebates_tax', 'marketplace_withheld_tax', 
+            'selling_fees', 'fba_fees', 'other_transaction_fees', 'other', 'total'
+            ]
 
         for col in numerical_columns:
             if col in df.columns:
@@ -356,19 +367,19 @@ class EuropeBusinessReportDownloads:
                 )
                 df[col] = pd.to_numeric(df[col], errors='coerce')
 
-        columns_to_remove = [
-            'Produktumsatzsteuer', 'Gutschrift für Versandkosten', 'Steuer auf Versandgutschrift',
-            'Gutschrift für Geschenkverpackung', 'Steuer auf Geschenkverpackungsgutschriften',
-            'Rabatte aus Werbeaktionen', 'Steuer auf Aktionsrabatte',
-            'Einbehaltene Steuer auf Marketplace'
-            ]
+        columns_to_remove = ['date_time']
             
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 
         rearrange_columns = [
-            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'description','quantity','marketplace',
-            'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
-            'other_transaction_fees','other','product_sales']
+            'date', 'time', 'weekday', 'settlement_id', 'type', 'order_id', 'sku', 
+            'description', 'quantity', 'marketplace', 'fulfillment', 'order_city', 
+            'order_state', 'order_postal', 'tax_collection_model', 'product_sales', 
+            'product_sales_tax', 'shipping_credits', 'shipping_credits_tax',
+            'gift_wrap_credits', 'giftwrap_credits_tax', 'promotional_rebates', 
+            'promotional_rebates_tax', 'marketplace_withheld_tax', 'selling_fees',
+            'fba_fees', 'other_transaction_fees', 'other', 'total'
+        ]
 
         existing_columns = [col for col in rearrange_columns if col in df.columns]
         df = df[existing_columns]

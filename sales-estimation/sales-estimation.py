@@ -88,10 +88,7 @@ class SalesEstimation:
 
         df['product_sales'] = df['product_sales'].astype(float).round(2)
 
-        columns_to_remove = [
-            'product_sales_tax', 'shipping_credits', 'shipping_credits_tax', 'gift_wrap_credits',
-            'giftwrap_credits_tax', 'Regulatory_Fee', 'Tax_On_Regulatory_Fee', 'promotional_rebates',
-            'promotional_rebates_tax', 'marketplace_withheld_tax', 'data_time']
+        columns_to_remove = ['data_time']
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 
         material_master = self.read_material_master()
@@ -103,9 +100,13 @@ class SalesEstimation:
         df['ASIN'] = df['sku'].map(sku_asin_map)
 
         rearrange_columns = [
-            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'ASIN', 'description','quantity','marketplace',
-            'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
-            'other_transaction_fees','other','product_sales']
+            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'ASIN', 'description',
+            'quantity','marketplace', 'account_type','fulfillment','order_city','order_state','order_postal',
+            'tax_collection_model', 'other_transaction_fees','other','product_sales', 'product_sales_tax', 
+            'shipping_credits', 'shipping_credits_tax', 'gift_wrap_credits', 'giftwrap_credits_tax', 
+            'Regulatory_Fee', 'Tax_On_Regulatory_Fee', 'promotional_rebates', 'promotional_rebates_tax', 
+            'marketplace_withheld_tax',  'selling_fees', 'fba_fees', 'other_transaction_fees', 'other', 'total'
+            ]
 
         existing_columns = [col for col in rearrange_columns if col in df.columns]
         df = df[existing_columns]

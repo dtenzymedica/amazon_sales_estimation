@@ -313,26 +313,37 @@ class EuropeBusinessReportDownloads:
 
     def data_cleaning_on_master_file(self):
         df = pd.read_csv(self.master_file)
-        df.columns = df.columns.str.replace(' ', '_').str.replace('/', '_')
+        df.columns = df.columns.str.replace(' ', '_').str.replace('/', '_').str.lower()
         column_rename_map = {
-                "fecha_y_hora": "date_time",
-                "identificador_de_pago": "settlement_id",
-                "tipo": "type",
-                "número_de_pedido": "order_id",
-                "sku": "sku",
-                "descripción": "description",
-                "cantidad": "quantity",
-                "web_de_Amazon": "marketplace",
-                "gestión_logística": "fulfillment",
-                "ciudad_de_procedencia_del_pedido": "order_city",
-                "comunidad_autónoma_de_procedencia_del_pedido": "order_state",
-                "código_postal_de_procedencia_del_pedido": "order_postal",
-                "Formulario_de_recaudación_de_impuestos": "tax_collection_model",
-                "ventas_de_productos": "product_sales",
-                "tarifas_de_otras_transacciones": "other_transaction_fees",
-                "otro": "other"
-            }
-        
+            "fecha_y_hora": "date_time",
+            "identificador_de_pago": "settlement_id",
+            "tipo": "type",
+            "número_de_pedido": "order_id",
+            "sku": "sku",
+            "descripción": "description",
+            "cantidad": "quantity",
+            "web_de_amazon": "marketplace",
+            "gestión_logística": "fulfillment",
+            "ciudad_de_procedencia_del_pedido": "order_city",
+            "comunidad_autónoma_de_procedencia_del_pedido": "order_state",
+            "código_postal_de_procedencia_del_pedido": "order_postal",
+            "formulario_de_recaudación_de_impuestos": "tax_collection_model",
+            "ventas_de_productos": "product_sales",
+            "impuesto_de_ventas_de_productos": "product_sales_tax",
+            "abonos_de_envío": "shipping_credits",
+            "impuestos_por_abonos_de_envío": "shipping_credits_tax",
+            "abonos_de_envoltorio_para_regalo": "gift_wrap_credits",
+            "impuestos_por_abonos_de_envoltorio_para_regalo": "giftwrap_credits_tax",
+            "devoluciones_promocionales": "promotional_rebates",
+            "impuestos_de_descuentos_por_promociones": "promotional_rebates_tax",
+            "impuesto_retenido_en_el_sitio_web": "marketplace_withheld_tax",
+            "tarifas_de_venta": "selling_fees",
+            "tarifas_de_logística_de_amazon": "fba_fees",
+            "tarifas_de_otras_transacciones": "other_transaction_fees",
+            "otro": "other",
+            "total": "total"
+        }
+
         df.rename(columns=column_rename_map, inplace=True)
         month_map = {
             'ene': 'Jan', 'feb': 'Feb', 'mar': 'Mar', 'abr': 'Apr',
@@ -353,8 +364,11 @@ class EuropeBusinessReportDownloads:
         df["weekday"] = df["date_time"].dt.day_name()
 
         numerical_columns = [
-            'product_sales','selling_fees', 'fba_fees', 'other_transaction_fees',
-            'other', 'total']
+            'quantity', 'product_sales', 'product_sales_tax', 'shipping_credits',
+            'shipping_credits_tax', 'gift_wrap_credits', 'giftwrap_credits_tax',
+            'promotional_rebates', 'promotional_rebates_tax', 'marketplace_withheld_tax', 
+            'selling_fees', 'fba_fees', 'other_transaction_fees', 'other', 'total'
+            ]
 
         for col in numerical_columns:
             if col in df.columns:
@@ -365,23 +379,19 @@ class EuropeBusinessReportDownloads:
                 )
                 df[col] = pd.to_numeric(df[col], errors='coerce')
 
-        columns_to_remove = [
-                "impuesto de ventas de productos",
-                "abonos de envío",
-                "impuestos por abonos de envío",
-                "abonos de envoltorio para regalo",
-                "impuestos por abonos de envoltorio para regalo",
-                "devoluciones promocionales",
-                "impuestos de descuentos por promociones",
-                "impuesto retenido en el sitio web"
-            ]
+        columns_to_remove = ['date_time']
             
         df.drop(columns=[col for col in columns_to_remove if col in df.columns], inplace=True)
 
         rearrange_columns = [
-            'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'description','quantity','marketplace',
-            'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model',
-            'other_transaction_fees','other','product_sales']
+            'date', 'time', 'weekday', 'settlement_id', 'type', 'order_id', 'sku', 
+            'description', 'quantity', 'marketplace', 'fulfillment', 'order_city', 
+            'order_state', 'order_postal', 'tax_collection_model', 'product_sales', 
+            'product_sales_tax', 'shipping_credits', 'shipping_credits_tax',
+            'gift_wrap_credits', 'giftwrap_credits_tax', 'promotional_rebates', 
+            'promotional_rebates_tax', 'marketplace_withheld_tax', 'selling_fees',
+            'fba_fees', 'other_transaction_fees', 'other', 'total'
+        ]
 
         existing_columns = [col for col in rearrange_columns if col in df.columns]
         df = df[existing_columns]
