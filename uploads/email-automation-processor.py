@@ -20,7 +20,8 @@ SCRIPTS = [
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\sales-estimation.py",
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\enzyme-science-sales-estimation.py",
     r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\eu-sales-estimation.py",
-    r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\result-email.py"
+    r"C:\Users\d.tanubudhi\amazon_sales_estimation\sales-estimation\result-email.py",
+    r'C:\Users\d.tanubudhi\amazon_sales_estimation\uploads\s3-uploads.py'
 ]
 
 def run_scripts():
