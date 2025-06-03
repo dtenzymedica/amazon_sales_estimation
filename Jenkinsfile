@@ -10,9 +10,13 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                echo "Cloning the repository..."
-                git url: 'https://github.com/dtenzymedica/amazon_sales_estimation.git', branch: 'main'
-                echo "Repository cloned successfully..."
+                script {
+                    retry(3) {
+                        echo "Cloning the repository..."
+                        git url: 'https://github.com/dtenzymedica/amazon_sales_estimation.git', branch: 'main'
+                        echo "Repository cloned successfully..."
+                    }
+                }
             }
         }
 
