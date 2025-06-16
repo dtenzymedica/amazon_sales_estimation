@@ -259,6 +259,7 @@ class BusinessReportDownloads:
                 return True
         logger.warning("No new matching file downloaded.")
         return False
+    
 if __name__ == "__main__":
     success = False
     attempts = 0
