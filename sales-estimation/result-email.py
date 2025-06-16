@@ -61,9 +61,9 @@ def send_sales_summary_email():
             rows += f"""
                 <tr>
                     <td style="padding: 8px; border: 1px solid #ddd;">{r['market']}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${r['actual_sales']:,.2f}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${r['estimated_sales']:,.2f}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>${r['total_estimation']:,.2f}</strong></td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">€{r['actual_sales']:,.2f}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">€{r['estimated_sales']:,.2f}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;"><strong>€{r['total_estimation']:,.2f}</strong></td>
                 </tr>
             """
 
@@ -71,9 +71,9 @@ def send_sales_summary_email():
         rows += f"""
             <tr style="background-color: #f9f9f9; font-weight: bold;">
                 <td style="padding: 8px; border: 1px solid #ddd;">Total Enzymedica EU</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${eu_actual:,.2f}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${eu_estimated:,.2f}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${eu_total:,.2f}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">€{eu_actual:,.2f}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">€{eu_estimated:,.2f}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">€{eu_total:,.2f}</td>
             </tr>
         """
 
