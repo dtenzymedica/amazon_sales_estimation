@@ -112,8 +112,8 @@ class DataProcessing:
             'date', 'time', 'weekday', 'settlement_id','type','order_id','sku', 'ASIN', 'description','quantity','marketplace',
             'account_type','fulfillment','order_city','order_state','order_postal','tax_collection_model','other_transaction_fees', 
             'product_sales_tax', 'shipping_credits', 'shipping_credits_tax', 'gift_wrap_credits', 'giftwrap_credits_tax', 
-            'Regulatory_Fee', 'Tax_On_Regulatory_Fee', 'promotional_rebates',
-            'promotional_rebates_tax', 'marketplace_withheld_tax', 'other','product_sales', 'total']
+            'Regulatory_Fee', 'Tax_On_Regulatory_Fee', 'promotional_rebates','promotional_rebates_tax', 'marketplace_withheld_tax', 
+            'other','product_sales', 'total']
 
         existing_columns = [col for col in rearrange_columns if col in df.columns]
         df = df[existing_columns]
