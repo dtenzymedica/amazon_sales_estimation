@@ -111,7 +111,8 @@ def send_sales_summary_email():
         html_content = f"""
         <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <h2>Amazon Sales Estimation Report {date_range_str}</h2>
+            <p>Hi Team,</p>
+            <p>The following is the Amazon Sales Estimation Report for <strong>{date_range_str}</strong>, including actual sales to date and projected sales for the remainder of the month.</p>
             <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
                 <thead>
                     <tr style="background-color: #f2f2f2;">
